@@ -1,3 +1,4 @@
+package server;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,6 +13,8 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 
+import api.API;
+
 public class Server {
 	
 	public static void main(String[] args) throws Exception {
@@ -21,7 +24,7 @@ public class Server {
 	public Server() throws Exception {
 		HttpsServer server = HttpsServer.create(new InetSocketAddress(443), 0);
 		server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
-		server.createContext("/test", new RequestHandler());
+		server.createContext("/api", new API());
 		server.setExecutor(null);
 		server.start();
 	}
@@ -36,15 +39,4 @@ public class Server {
 	    sslContext.init(kmf.getKeyManagers(), null, null);
 	    return sslContext;
     }
-	
-	static class RequestHandler implements HttpHandler {
-		@Override
-		public void handle(HttpExchange t) throws IOException {
-			String response = "This is the response";
-            t.sendResponseHeaders(200, response.getBytes().length);
-            OutputStream os = t.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-		}
-	}
 }
