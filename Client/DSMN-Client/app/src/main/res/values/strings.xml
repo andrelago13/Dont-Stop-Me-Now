@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DSMN-Client</string>
+    <string name="app_name">Don't Stop Me Now</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
