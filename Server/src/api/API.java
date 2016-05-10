@@ -11,6 +11,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.sun.net.httpserver.Headers;
@@ -63,17 +64,22 @@ public class API implements HttpHandler {
 
 	private void eventListVerb(HttpExchange t, String method, String[] paths, Map<String, String> query) throws IOException, SQLException {
 		Statement stmt = this.db.createStatement();
-		ResultSet rs = stmt.executeQuery("SELECT * FROM Events");
-		if (rs.next()) {
+		ResultSet rs = stmt.executeQuery("SELECT * FROM Events ORDER BY datetime DESC");
+		JSONArray ja = new JSONArray();
+		while (rs.next()) {
 			JSONObject jo = new JSONObject();
 			jo.put("id", rs.getInt("id"));
 			jo.put("description", rs.getString("description"));
-			respond(t, jo.toString(), 200);
+			
+			String location = rs.getString("location");
+			String coords = rs.getString("coords");
+			if (location != null) jo.put("location", location);
+			if (coords != null) jo.put("coordinates", coords);
+			
+			jo.put("datetime", rs.getTimestamp("datetime"));
+			ja.put(jo);
 		}
-		else {
-			String response = "{\"events\":[{\"id\":1,\"name\":\"Evento 1\",\"type\":\"mobile_radar\"},{\"id\":2,\"name\":\"Evento 2\",\"type\":\"traffic_stop\"}]}";
-			respond(t, response, 200);
-		}
+		respond(t, ja.toString(), 200);
 		rs.close();
 		stmt.close();
 	}
