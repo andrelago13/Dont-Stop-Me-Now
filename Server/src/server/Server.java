@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
+import java.sql.Connection;
+import java.sql.DriverManager;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -22,6 +24,8 @@ public class Server {
 	}
 	
 	public Server() throws Exception {
+		Class.forName("org.postgresql.Driver");
+		Connection db = DriverManager.getConnection("jdbc:postgresql://localhost/", "", "");
 		HttpsServer server = HttpsServer.create(new InetSocketAddress(443), 0);
 		server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
 		server.createContext("/api", new API());
