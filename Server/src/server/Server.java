@@ -18,14 +18,11 @@ import com.sun.net.httpserver.HttpsServer;
 import api.API;
 
 public class Server {
-	
 	public static void main(String[] args) throws Exception {
 		Server server = new Server();
 	}
 	
-	public Server() throws Exception {
-		Class.forName("org.postgresql.Driver");
-		Connection db = DriverManager.getConnection("jdbc:postgresql://localhost/", "", "");
+	private Server() throws Exception {
 		HttpsServer server = HttpsServer.create(new InetSocketAddress(443), 0);
 		server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
 		server.createContext("/api", new API());
