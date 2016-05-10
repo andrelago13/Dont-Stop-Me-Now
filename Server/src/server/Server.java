@@ -12,6 +12,7 @@ import javax.net.ssl.SSLContext;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 
@@ -23,8 +24,8 @@ public class Server {
 	}
 	
 	private Server() throws Exception {
-		HttpsServer server = HttpsServer.create(new InetSocketAddress(443), 0);
-		server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
+		HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
+		//server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
 		server.createContext("/api", new API());
 		server.setExecutor(null);
 		server.start();
