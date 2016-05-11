@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 -- 0 -> Mobile speed radar --
 -- 1 -> Traffic stop --
 -- 2 -> High traffic area --
