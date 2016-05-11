@@ -4,26 +4,28 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
+import java.sql.Connection;
+import java.sql.DriverManager;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 
 import api.API;
 
 public class Server {
-	
 	public static void main(String[] args) throws Exception {
 		Server server = new Server();
 	}
 	
-	public Server() throws Exception {
-		HttpsServer server = HttpsServer.create(new InetSocketAddress(443), 0);
-		server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
+	private Server() throws Exception {
+		HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
+		//server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
 		server.createContext("/api", new API());
 		server.setExecutor(null);
 		server.start();

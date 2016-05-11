@@ -1,53 +1,220 @@
 package api;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import jdk.nashorn.internal.scripts.JO;
+
 public class API implements HttpHandler {
+	Connection db;
+
+	public API() throws ClassNotFoundException, SQLException {
+		Class.forName("org.postgresql.Driver");
+		this.db = DriverManager.getConnection("jdbc:postgresql://localhost/", "postgres", "123456");
+	}
+
 	@Override
 	public void handle(HttpExchange t) throws IOException {
 		String method = t.getRequestMethod();
 		URI uri = t.getRequestURI();
 		String[] paths = uri.getPath().replaceFirst("^/", "").split("/");
 		String query = uri.getQuery();
-		process(t, method, paths, query == null ? null : queryToMap(query));
+		if (query == null)
+			query = "";
+		Map<String, String> map = queryToMap(query);
+		try {
+			process(t, method, paths, map);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			respond(t, formatError(method, map, "Unknown error."), 500);
+		}
 	}
 
-	private void process(HttpExchange t, String method, String[] paths, Map<String, String> query) throws IOException {
+	private void process(HttpExchange t, String method, String[] paths, Map<String, String> query)
+			throws IOException, SQLException {
 		Headers h = t.getResponseHeaders();
 		h.add("Content-Type", "application/json");
-		
+
+		InputStream is = t.getRequestBody();
+		Scanner s = new Scanner(is);
+		s.useDelimiter("\\A");
+		String body = s.hasNext() ? s.next() : "";
+		s.close();
+		is.close();
+
 		switch (paths[1]) {
 		case "event":
-			eventEndpoint(t, method, paths, query);
+			eventEndpoint(t, method, paths, query, body);
 			break;
 		default: {
 			String response = "{a:\"aaaa\", b}";
-			t.sendResponseHeaders(200, response.getBytes().length);
-			OutputStream os = t.getResponseBody();
-			os.write(response.getBytes());
-			os.close();
+			respond(t, response, 200);
 		}
 		}
 	}
 
-	private void eventEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query) throws IOException {
-		switch (paths[2]) {
-		case "list":
-			eventListVerb(t, method, paths, query);
+	private void eventEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body)
+			throws IOException, SQLException {
+		if (paths.length >= 3) {
+			switch (paths[2]) {
+			case "list":
+				eventListVerb(t, method, paths, query);
+				break;
+			}
+		}
+		switch (method) {
+		case "GET": {
+			try {
+				String sID = query.get("id");
+				if (sID == null)
+					respond(t, formatError(method, query, "Missing argument 'id'."), 400);
+				else {
+					int id = Integer.parseInt(sID);
+					Statement stmt = this.db.createStatement();
+					ResultSet rs = stmt.executeQuery("SELECT * FROM Events WHERE id = " + id);
+					if (!rs.next())
+						respond(t, formatError(method, query, "Event does not exist."), 400);
+					else
+						respond(t, eventResultToJSON(rs).toString(), 200);
+				}
+			} catch (NumberFormatException e) {
+				respond(t, formatError(method, query, "Invalid request parameters."), 400);
+			}
+		}
 			break;
+		case "PUT":
+			eventCreate(t, method, query, body);
+			break;
+		default:
+			respond(t, formatError(method, query, "Invalid method."), 404);
 		}
 	}
 
-	private void eventListVerb(HttpExchange t, String method, String[] paths, Map<String, String> query) throws IOException {
-		String response = "{\"events\":[{\"id\":1,\"name\":\"Evento 1\",\"type\":\"mobile_radar\"},{\"id\":2,\"name\":\"Evento 2\",\"type\":\"traffic_stop\"}]}";
+	private void eventCreate(HttpExchange t, String method, Map<String, String> query, String body)
+			throws IOException, SQLException {
+		try {
+			JSONObject jo = new JSONObject(body).getJSONObject("create_event");
+			PreparedStatement stmt = this.db.prepareStatement(
+					"INSERT INTO Events (type, description, location, coords) VALUES (?, ?, ?, Point(?, ?))");
+			stmt.setInt(1, jo.getInt("type"));
+			stmt.setString(2, jo.getString("description"));
+			
+			if (jo.has("location"))
+				stmt.setString(3, jo.getString("location"));
+			else
+				stmt.setNull(3, java.sql.Types.NULL);
+			
+			if (jo.has("latitude") && jo.has("longitude")) {
+				stmt.setFloat(4, (float)jo.getDouble("latitude"));
+				stmt.setFloat(5, (float)jo.getDouble("longitude"));
+			} else {
+				stmt.setNull(4, java.sql.Types.NULL);
+				stmt.setNull(5, java.sql.Types.NULL);
+			}
+
+			if (stmt.executeUpdate() == 0)
+				respond(t, formatError(method, query, "Invalid request parameters."), 400);
+			else
+				respond(t, formatSuccess(method, query), 200);
+		} catch (JSONException e) {
+			respond(t, formatError(method, query, "Invalid request."), 400);
+			return;
+		}
+
+	}
+
+	private String findMissingArgument(Map<String, String> query, String... requireds) {
+		for (String required : requireds) {
+			if (query.get(required) == null)
+				return required;
+		}
+		return null;
+	}
+
+	private JSONObject eventResultToJSON(ResultSet rs) throws JSONException, SQLException {
+		JSONObject jo = new JSONObject();
+		jo.put("id", rs.getInt("id"));
+		jo.put("type", rs.getInt("type"));
+		jo.put("description", rs.getString("description"));
+
+		String location = rs.getString("location");
+		String coords = rs.getString("coords");
+		if (location != null)
+			jo.put("location", location);
+		if (coords != null)
+			jo.put("coordinates", coords);
+
+		jo.put("datetime", rs.getTimestamp("datetime"));
+		return jo;
+	}
+
+	private void eventListVerb(HttpExchange t, String method, String[] paths, Map<String, String> query)
+			throws IOException, SQLException {
+		if (!method.equals("GET")) {
+			String response = formatError(method, query, "Invalid method.");
+			respond(t, response, 404);
+		} else {
+			Statement stmt = this.db.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Events ORDER BY datetime DESC");
+			JSONArray ja = new JSONArray();
+			while (rs.next()) {
+				ja.put(eventResultToJSON(rs));
+			}
+			respond(t, ja.toString(), 200);
+			rs.close();
+			stmt.close();
+		}
+	}
+
+	private String formatError(String method, Map<String, String> query, String errorMsg) {
+		JSONObject jo = new JSONObject();
+		JSONObject joError = new JSONObject();
+		joError.put("oper", method);
+		if (query != null)
+			for (Map.Entry<String, String> entry : query.entrySet()) {
+				joError.put(entry.getKey(), entry.getValue());
+			}
+		joError.put("msg", errorMsg);
+		jo.put("error", joError);
+		return jo.toString();
+	}
+
+	private String formatSuccess(String method, Map<String, String> query) {
+		JSONObject jo = new JSONObject();
+		JSONObject joSuccess = new JSONObject();
+		joSuccess.put("oper", method);
+		if (query != null)
+			for (Map.Entry<String, String> entry : query.entrySet()) {
+				joSuccess.put(entry.getKey(), entry.getValue());
+			}
+		jo.put("success", joSuccess);
+		return jo.toString();
+	}
+
+	private void respond(HttpExchange t, String response, int code) throws IOException {
 		t.sendResponseHeaders(200, response.getBytes().length);
 		OutputStream os = t.getResponseBody();
 		os.write(response.getBytes());
@@ -55,13 +222,13 @@ public class API implements HttpHandler {
 	}
 
 	private Map<String, String> queryToMap(String query) {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new LinkedHashMap<String, String>();
 		for (String param : query.split("&")) {
 			String pair[] = param.split("=");
 			if (pair.length > 1) {
-				result.put(pair[0], pair[1]);
+				result.put(pair[0].toLowerCase(), pair[1]);
 			} else {
-				result.put(pair[0], "");
+				result.put(pair[0].toLowerCase(), "");
 			}
 		}
 		return result;
