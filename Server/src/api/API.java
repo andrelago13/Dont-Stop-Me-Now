@@ -75,7 +75,7 @@ public class API implements HttpHandler {
 		}
 		}
 	}
-
+	
 	private void eventEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body)
 			throws IOException, SQLException {
 		if (paths.length >= 3) {
@@ -146,6 +146,15 @@ public class API implements HttpHandler {
 
 	}
 
+	private void commentEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body) throws IOException {
+		switch (method) {
+		case "PUT":
+			break;
+		default:
+			respond(t, formatError(method, query, "Invalid method."), 404);
+		}
+	}
+	
 	private String findMissingArgument(Map<String, String> query, String... requireds) {
 		for (String required : requireds) {
 			if (query.get(required) == null)
@@ -188,7 +197,11 @@ public class API implements HttpHandler {
 			stmt.close();
 		}
 	}
-
+	
+	/***********************************
+	 ************** UTILS **************
+	 ***********************************/
+	
 	private String formatError(String method, Map<String, String> query, String errorMsg) {
 		JSONObject jo = new JSONObject();
 		JSONObject joError = new JSONObject();
