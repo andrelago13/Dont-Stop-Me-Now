@@ -49,6 +49,8 @@ CREATE TABLE comments
 	datetime TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP)
 );
 
+CREATE INDEX coords_lat_lng_index ON events USING gist(coords);
+
 CREATE OR REPLACE FUNCTION update_confirmations() RETURNS TRIGGER AS 
 $function$
 BEGIN

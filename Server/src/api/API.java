@@ -283,6 +283,18 @@ public class API implements HttpHandler {
 			break;
 		}
 		case "DELETE": {
+			try {
+				JSONObject jo = new JSONObject(body).getJSONObject("event_confirm");
+				PreparedStatement stmt = this.db.prepareStatement("DELETE FROM Confirmations WHERE event = ? AND creator = ?");
+				stmt.setInt(1, jo.getInt("eventid"));
+				stmt.setInt(2, 1); // TODO
+				if (stmt.executeUpdate() == 0)
+					respond(t, formatError(method, query, "No confirmation to delete."), 404);
+				else
+					respond(t, formatSuccess(method, query), 200);
+			} catch (JSONException e) {
+				respond(t, formatError(method, query, "Invalid request body."), 400);
+			}
 			break;
 		}
 		default: {
