@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/DSMN-Client.iml" filepath="$PROJECT_DIR$/DSMN-Client.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dsmn/dsmn.iml" filepath="$PROJECT_DIR$/dsmn/dsmn.iml" />
     </modules>
   </component>
 </project>

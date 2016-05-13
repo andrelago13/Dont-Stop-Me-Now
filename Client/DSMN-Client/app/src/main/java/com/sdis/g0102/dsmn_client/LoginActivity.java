@@ -29,6 +29,15 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+@Override
+public void onCreate() {
+    super.onCreate();
+    FacebookSdk.sdkInitialize(getApplicationContext());
+    AppEventsLogger.activateApp(this);
+}
+ */
+
 
 /**
  * A login screen that offers login via email/password.
