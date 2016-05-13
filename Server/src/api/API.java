@@ -86,6 +86,9 @@ public class API implements HttpHandler {
 			case "list":
 				eventListVerb(t, method, paths, query);
 				break;
+			case "comments":
+				eventCommentsVerb(t, method, paths, query);
+				break;
 			}
 		}
 		switch (method) {
@@ -155,8 +158,9 @@ public class API implements HttpHandler {
 			try {
 				JSONObject jo = new JSONObject(body).getJSONObject("create_comment");
 				PreparedStatement stmt = this.db.prepareStatement(
-						"INSERT INTO Comments (message) VALUES (?)");
-				stmt.setString(1, jo.getString("message"));
+						"INSERT INTO Comments (event, message) VALUES (?, ?)");
+				stmt.setInt(1, jo.getInt("eventid"));
+				stmt.setString(2, jo.getString("message"));
 
 				if (stmt.executeUpdate() == 0)
 					respond(t, formatError(method, query, "Invalid request parameters."), 400);
@@ -213,6 +217,41 @@ public class API implements HttpHandler {
 			rs.close();
 			stmt.close();
 		}
+	}
+
+	private void eventCommentsVerb(HttpExchange t, String method, String[] paths, Map<String, String> query) throws IOException, SQLException {
+		if (!method.equals("GET")) {
+			String response = formatError(method, query, "Invalid method.");
+			respond(t, response, 404);
+		} else {
+			try {
+				String sID = query.get("eventid");
+				if (sID == null)
+					respond(t, formatError(method, query, "Missing argument 'eventid'."), 400);
+				else {
+					PreparedStatement stmt = this.db.prepareStatement("SELECT * FROM Comments WHERE Comments.event = ? ORDER BY datetime DESC");
+					stmt.setInt(1, Integer.parseInt(sID));
+					ResultSet rs = stmt.executeQuery();
+					JSONArray ja = new JSONArray();
+					while (rs.next()) {
+						ja.put(commentResultToJSON(rs));
+					}
+					respond(t, ja.toString(), 200);
+					rs.close();
+					stmt.close();
+				}
+			} catch (NumberFormatException e) {
+				respond(t, formatError(method, query, "Invalid request parameters."), 400);
+			}
+		}
+	}
+	
+	private JSONObject commentResultToJSON(ResultSet rs) throws JSONException, SQLException {
+		JSONObject jo = new JSONObject();
+		jo.put("id", rs.getInt("id"));
+		jo.put("message", rs.getString("message"));
+		jo.put("datetime", rs.getTimestamp("datetime"));
+		return jo;
 	}
 
 	/***********************************
