@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS events CASCADE;
 CREATE TABLE events
 (
 	id SERIAL PRIMARY KEY,
+	creator INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
 	type EVENTTYPE NOT NULL,
 	description TEXT NOT NULL,
 	location TEXT,
@@ -33,6 +34,7 @@ DROP TABLE IF EXISTS confirmations CASCADE;
 CREATE TABLE confirmations
 (
 	id SERIAL PRIMARY KEY,
+	creator INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
 	event INTEGER REFERENCES events(id) ON DELETE CASCADE NOT NULL,
 	type BOOLEAN NOT NULL
 );
@@ -41,6 +43,7 @@ DROP TABLE IF EXISTS comments CASCADE;
 CREATE TABLE comments
 (
 	id SERIAL PRIMARY KEY,
+	writer INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
 	event INTEGER REFERENCES events(id) ON DELETE CASCADE NOT NULL,
 	message TEXT NOT NULL,
 	datetime TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP)
@@ -86,5 +89,7 @@ CREATE TRIGGER update_confirmations
 	FOR EACH ROW
 	EXECUTE PROCEDURE update_confirmations();
 
-INSERT INTO events (type, description, location) VALUES (0, 'Toyota azul com radar.', 'Em frente à Makro, na Via Norte, sentido Porto - Maia.');
-INSERT INTO comments (event, message) VALUES (1, 'Test comment.');
+INSERT INTO users (facebookID) VALUES ('100000416538494');
+INSERT INTO events (creator, type, description, location) VALUES (1, 0, 'Toyota azul com radar.', 'Em frente à Makro, na Via Norte, sentido Porto - Maia.');
+INSERT INTO comments (writer, event, message) VALUES (1, 1, 'Test comment.');
+INSERT INTO confirmations (creator, event, type) VALUES (1, 1, TRUE);

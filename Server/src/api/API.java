@@ -65,14 +65,14 @@ public class API implements HttpHandler {
 			respond(t, formatError(method, null, "Authentication failed"), 401);
 			return;
 		}
-		
+
 		InputStream is = t.getRequestBody();
 		Scanner s = new Scanner(is);
 		s.useDelimiter("\\A");
 		String body = s.hasNext() ? s.next() : "";
 		s.close();
 		is.close();
-		
+
 		switch (paths[pathOffset]) {
 		case "events":
 			eventsEndpoint(t, method, paths, query, body);
@@ -83,7 +83,7 @@ public class API implements HttpHandler {
 		}
 		}
 	}
-	
+
 	private boolean checkAuth(HttpExchange t) {
 		String token = t.getRequestHeaders().getFirst("Authorization");
 		System.out.println("Token: " + token);
@@ -95,7 +95,7 @@ public class API implements HttpHandler {
 		if (paths.length < pathOffset + 2) { //events/
 			switch (method) {
 			case "GET":
-				eventListVerb(t, method, paths, query);
+				eventList(t, method, paths, query);
 				break;
 			case "POST":
 				eventCreate(t, method, paths, query, body);
@@ -112,16 +112,19 @@ public class API implements HttpHandler {
 			respond(t, formatError(method, query, "Invalid event ID."), 400);
 			return;
 		}
-		if (paths.length >= pathOffset + 3) {
+		if (paths.length >= pathOffset + 3) { //events/<id>/...
 			switch (paths[pathOffset + 2]) {
 			case "comments":
 				eventCommentsVerb(t, method, paths, query, body, eventID);
+				break;
+			case "confirm":
+				eventConfirmVerb(t, method, paths, query, body, eventID);
 				break;
 			default:
 				respond(t, formatError(method, query, "Unknown verb '" + paths[pathOffset + 1] + "'."), 404);
 			}
 		}
-		else {
+		else { //events/<id>
 			switch (method) {
 			case "GET": {
 				Statement stmt = this.db.createStatement();
@@ -199,7 +202,7 @@ public class API implements HttpHandler {
 		return jo;
 	}
 
-	private void eventListVerb(HttpExchange t, String method, String[] paths, Map<String, String> query)
+	private void eventList(HttpExchange t, String method, String[] paths, Map<String, String> query)
 			throws IOException, SQLException {
 		if (!method.equals("GET")) {
 			String response = formatError(method, query, "Invalid method.");
@@ -247,6 +250,39 @@ public class API implements HttpHandler {
 			} catch (JSONException e) {
 				respond(t, formatError(method, query, "Invalid request body."), 400);
 			}
+			break;
+		}
+		default: {
+			String response = formatError(method, query, "Invalid method.");
+			respond(t, response, 404);
+		}
+		}
+	}
+
+	private void eventConfirmVerb(HttpExchange t, String method, String[] paths, Map<String, String> query, String body, int eventID) throws IOException, SQLException {
+		switch (method) {
+		case "PUT": {
+			try {
+				JSONObject jo = new JSONObject(body).getJSONObject("event_confirm");
+				PreparedStatement stmt = this.db.prepareStatement(
+						"INSERT INTO Confirmations (creator, type, event) VALUES (?, ?, ?) ON CONFLICT DO UPDATE SET type = ? WHERE creator = ? AND event = ?");
+				stmt.setInt(1, 1); // TODO
+				stmt.setBoolean(2, jo.getBoolean("type"));
+				stmt.setInt(3, jo.getInt("eventid"));
+				stmt.setBoolean(3, jo.getBoolean("type"));
+				stmt.setInt(4, 1); // TODO
+				stmt.setInt(5, jo.getInt("eventid"));
+
+				if (stmt.executeUpdate() == 0)
+					respond(t, formatError(method, query, "Invalid request parameters."), 400);
+				else
+					respond(t, formatSuccess(method, query), 200);
+			} catch (JSONException e) {
+				respond(t, formatError(method, query, "Invalid request body."), 400);
+			}
+			break;
+		}
+		case "DELETE": {
 			break;
 		}
 		default: {
