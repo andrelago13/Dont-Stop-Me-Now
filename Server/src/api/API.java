@@ -125,7 +125,7 @@ public class API implements HttpHandler {
 			switch (method) {
 			case "GET": {
 				Statement stmt = this.db.createStatement();
-				ResultSet rs = stmt.executeQuery("SELECT * FROM Events WHERE id = " + eventID);
+				ResultSet rs = stmt.executeQuery("SELECT *, coords[0] AS latitude, coords[1] AS longitude FROM Events WHERE id = " + eventID);
 				if (!rs.next())
 					respond(t, formatError(method, query, "Event does not exist."), 400);
 				else
@@ -186,11 +186,14 @@ public class API implements HttpHandler {
 		jo.put("description", rs.getString("description"));
 
 		String location = rs.getString("location");
-		String coords = rs.getString("coords");
+		String latitude = rs.getString("latitude");
+		String longitude = rs.getString("longitude");
 		if (location != null)
 			jo.put("location", location);
-		if (coords != null)
-			jo.put("coordinates", coords);
+		if (latitude != null && longitude != null) {
+			jo.put("latitude", latitude);
+			jo.put("longitude", longitude);
+		}
 
 		jo.put("datetime", rs.getTimestamp("datetime"));
 		return jo;
@@ -203,7 +206,7 @@ public class API implements HttpHandler {
 			respond(t, response, 404);
 		} else {
 			Statement stmt = this.db.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM Events ORDER BY datetime DESC");
+			ResultSet rs = stmt.executeQuery("SELECT *, coords[0] AS latitude, coords[1] AS longitude FROM Events ORDER BY datetime DESC");
 			JSONArray ja = new JSONArray();
 			while (rs.next()) {
 				ja.put(eventResultToJSON(rs));

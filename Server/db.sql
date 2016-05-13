@@ -87,3 +87,4 @@ CREATE TRIGGER update_confirmations
 	EXECUTE PROCEDURE update_confirmations();
 
 INSERT INTO events (type, description, location) VALUES (0, 'Toyota azul com radar.', 'Em frente à Makro, na Via Norte, sentido Porto - Maia.');
+INSERT INTO comments (event, message) VALUES (1, 'Test comment.');
