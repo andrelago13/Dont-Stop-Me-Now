@@ -97,7 +97,7 @@ public class API implements HttpHandler {
 			case "GET":
 				eventListVerb(t, method, paths, query);
 				break;
-			case "PUT":
+			case "POST":
 				eventCreate(t, method, paths, query, body);
 				break;
 			default:
@@ -232,7 +232,7 @@ public class API implements HttpHandler {
 			stmt.close();
 			break;
 		}
-		case "PUT": {
+		case "POST": {
 			try {
 				JSONObject jo = new JSONObject(body).getJSONObject("create_comment");
 				PreparedStatement stmt = this.db.prepareStatement(
