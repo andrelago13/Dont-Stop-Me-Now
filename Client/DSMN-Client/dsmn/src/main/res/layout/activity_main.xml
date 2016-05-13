@@ -7,14 +7,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.sdis.g0102.dsmn.MainActivity">
 
-    <fragment
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:name="com.sdis.g0102.dsmn.facebook.CustomFacebookFragment"
-        android:id="@+id/fragment"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -24,4 +16,12 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="62dp" />
+
+    <com.facebook.login.widget.LoginButton
+        android:id="@+id/login_button_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="30dp" />
 </RelativeLayout>
