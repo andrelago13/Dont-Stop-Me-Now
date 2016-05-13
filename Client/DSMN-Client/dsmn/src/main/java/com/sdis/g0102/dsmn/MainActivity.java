@@ -1,5 +1,7 @@
 package com.sdis.g0102.dsmn;
 
+import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
