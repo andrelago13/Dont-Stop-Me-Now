@@ -23,7 +23,10 @@ CREATE TABLE events
 	location TEXT,
 	coords POINT,
 	datetime TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP),
-	CONSTRAINT has_location CHECK (location IS NOT NULL OR coords IS NOT NULL)
+	positiveconfirmations INT NOT NULL DEFAULT 0,
+	negativeconfirmations INT NOT NULL DEFAULT 0,
+	CONSTRAINT has_location CHECK (location IS NOT NULL OR coords IS NOT NULL),
+	CONSTRAINT positive_numconfirmations CHECK (positiveconfirmations >= 0 AND negativeconfirmations >= 0)
 );
 
 DROP TABLE IF EXISTS confirmations CASCADE;
@@ -42,5 +45,45 @@ CREATE TABLE comments
 	message TEXT NOT NULL,
 	datetime TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP)
 );
+
+CREATE OR REPLACE FUNCTION update_confirmations() RETURNS TRIGGER AS 
+$function$
+BEGIN
+	IF (TG_OP = 'DELETE') THEN
+		IF (OLD.type) THEN
+			UPDATE events SET positiveconfirmations = positiveconfirmations - 1;
+		ELSE
+			UPDATE events SET negativeconfirmations = negativeconfirmations - 1;
+		END IF;
+		RETURN NULL;
+	END IF;
+	
+	IF (TG_OP = 'UPDATE') THEN
+		IF (OLD.type = NEW.type) THEN
+			RETURN NEW;
+		ELSE
+			IF (OLD.type) THEN
+				UPDATE events SET positiveconfirmations = positiveconfirmations - 1;
+			ELSE
+				UPDATE events SET negativeconfirmations = negativeconfirmations - 1;
+			END IF;
+		END IF;
+	END IF;
+	
+	IF (NEW.type) THEN
+		UPDATE events SET positiveconfirmations = positiveconfirmations + 1;
+	ELSE
+		UPDATE events SET negativeconfirmations = negativeconfirmations + 1;
+	END IF;
+	RETURN NEW;
+END;
+$function$
+LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_confirmations ON events;
+CREATE TRIGGER update_confirmations
+	AFTER INSERT OR UPDATE OF type ON confirmations
+	FOR EACH ROW
+	EXECUTE PROCEDURE update_confirmations();
 
 INSERT INTO events (type, description, location) VALUES (0, 'Toyota azul com radar.', 'Em frente à Makro, na Via Norte, sentido Porto - Maia.');
