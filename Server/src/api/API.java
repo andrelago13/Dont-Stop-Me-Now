@@ -69,13 +69,16 @@ public class API implements HttpHandler {
 		case "event":
 			eventEndpoint(t, method, paths, query, body);
 			break;
+		case "comment":
+			commentEndpoint(t, method, paths, query, body);
+			break;
 		default: {
 			String response = "{a:\"aaaa\", b}";
 			respond(t, response, 200);
 		}
 		}
 	}
-	
+
 	private void eventEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body)
 			throws IOException, SQLException {
 		if (paths.length >= 3) {
@@ -104,7 +107,7 @@ public class API implements HttpHandler {
 				respond(t, formatError(method, query, "Invalid request parameters."), 400);
 			}
 		}
-			break;
+		break;
 		case "PUT":
 			eventCreate(t, method, query, body);
 			break;
@@ -121,12 +124,12 @@ public class API implements HttpHandler {
 					"INSERT INTO Events (type, description, location, coords) VALUES (?, ?, ?, Point(?, ?))");
 			stmt.setInt(1, jo.getInt("type"));
 			stmt.setString(2, jo.getString("description"));
-			
+
 			if (jo.has("location"))
 				stmt.setString(3, jo.getString("location"));
 			else
 				stmt.setNull(3, java.sql.Types.NULL);
-			
+
 			if (jo.has("latitude") && jo.has("longitude")) {
 				stmt.setFloat(4, (float)jo.getDouble("latitude"));
 				stmt.setFloat(5, (float)jo.getDouble("longitude"));
@@ -140,21 +143,35 @@ public class API implements HttpHandler {
 			else
 				respond(t, formatSuccess(method, query), 200);
 		} catch (JSONException e) {
-			respond(t, formatError(method, query, "Invalid request."), 400);
+			respond(t, formatError(method, query, "Invalid request body."), 400);
 			return;
 		}
 
 	}
 
-	private void commentEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body) throws IOException {
+	private void commentEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body) throws IOException, SQLException {
 		switch (method) {
-		case "PUT":
-			break;
+		case "PUT": {
+			try {
+				JSONObject jo = new JSONObject(body).getJSONObject("create_comment");
+				PreparedStatement stmt = this.db.prepareStatement(
+						"INSERT INTO Comments (message) VALUES (?)");
+				stmt.setString(1, jo.getString("message"));
+
+				if (stmt.executeUpdate() == 0)
+					respond(t, formatError(method, query, "Invalid request parameters."), 400);
+				else
+					respond(t, formatSuccess(method, query), 200);
+			} catch (JSONException e) {
+				respond(t, formatError(method, query, "Invalid request body."), 400);
+			}
+		}
+		break;
 		default:
 			respond(t, formatError(method, query, "Invalid method."), 404);
 		}
 	}
-	
+
 	private String findMissingArgument(Map<String, String> query, String... requireds) {
 		for (String required : requireds) {
 			if (query.get(required) == null)
@@ -197,11 +214,11 @@ public class API implements HttpHandler {
 			stmt.close();
 		}
 	}
-	
+
 	/***********************************
 	 ************** UTILS **************
 	 ***********************************/
-	
+
 	private String formatError(String method, Map<String, String> query, String errorMsg) {
 		JSONObject jo = new JSONObject();
 		JSONObject joError = new JSONObject();
