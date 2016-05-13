@@ -74,9 +74,6 @@ public class API implements HttpHandler {
 		is.close();
 		
 		switch (paths[pathOffset]) {
-		case "event":
-			eventEndpoint(t, method, paths, query, body);
-			break;
 		case "events":
 			eventsEndpoint(t, method, paths, query, body);
 			break;
@@ -93,10 +90,19 @@ public class API implements HttpHandler {
 		return true;
 	}
 
-	private void eventEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body)
+	private void eventsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body)
 			throws IOException, SQLException {
-		if (paths.length < pathOffset + 2) {
-			respond(t, formatError(method, query, "Missing event id."), 404);
+		if (paths.length < pathOffset + 2) { //events/
+			switch (method) {
+			case "GET":
+				eventListVerb(t, method, paths, query);
+				break;
+			case "PUT":
+				eventCreate(t, method, paths, query, body);
+				break;
+			default:
+				respond(t, formatError(method, query, "Invalid method."), 404);
+			}
 			return;
 		}
 		int eventID;
@@ -129,23 +135,6 @@ public class API implements HttpHandler {
 			default:
 				respond(t, formatError(method, query, "Invalid method."), 404);
 			}
-		}
-	}
-
-	private void eventsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body) throws IOException, SQLException {
-		if (paths.length > pathOffset + 1) {
-			respond(t, formatError(method, query, "Unknown request."), 404);
-			return;
-		}
-		switch (method) {
-		case "GET":
-			eventListVerb(t, method, paths, query);
-			break;
-		case "PUT":
-			eventCreate(t, method, paths, query, body);
-			break;
-		default:
-			respond(t, formatError(method, query, "Invalid method."), 404);
 		}
 	}
 
