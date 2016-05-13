@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -30,10 +31,12 @@ import jdk.nashorn.internal.scripts.JO;
 
 public class API implements HttpHandler {
 	Connection db;
+	int pathOffset;
 
-	public API() throws ClassNotFoundException, SQLException {
+	public API(int pathOffset) throws ClassNotFoundException, SQLException {
 		Class.forName("org.postgresql.Driver");
 		this.db = DriverManager.getConnection("jdbc:postgresql://localhost/", "postgres", "123456");
+		this.pathOffset = pathOffset;
 	}
 
 	@Override
@@ -58,19 +61,24 @@ public class API implements HttpHandler {
 		Headers h = t.getResponseHeaders();
 		h.add("Content-Type", "application/json");
 
+		if (!checkAuth(t)) {
+			respond(t, formatError(method, null, "Authentication failed"), 401);
+			return;
+		}
+		
 		InputStream is = t.getRequestBody();
 		Scanner s = new Scanner(is);
 		s.useDelimiter("\\A");
 		String body = s.hasNext() ? s.next() : "";
 		s.close();
 		is.close();
-
-		switch (paths[1]) {
+		
+		switch (paths[pathOffset]) {
 		case "event":
 			eventEndpoint(t, method, paths, query, body);
 			break;
-		case "comment":
-			commentEndpoint(t, method, paths, query, body);
+		case "events":
+			eventsEndpoint(t, method, paths, query, body);
 			break;
 		default: {
 			String response = "{a:\"aaaa\", b}";
@@ -78,48 +86,70 @@ public class API implements HttpHandler {
 		}
 		}
 	}
+	
+	private boolean checkAuth(HttpExchange t) {
+		String token = t.getRequestHeaders().getFirst("Authorization");
+		System.out.println("Token: " + token);
+		return true;
+	}
 
 	private void eventEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body)
 			throws IOException, SQLException {
-		if (paths.length >= 3) {
-			switch (paths[2]) {
-			case "list":
-				eventListVerb(t, method, paths, query);
-				break;
+		if (paths.length < pathOffset + 2) {
+			respond(t, formatError(method, query, "Missing event id."), 404);
+			return;
+		}
+		int eventID;
+		try {
+			eventID = Integer.parseInt(paths[pathOffset + 1]);
+		} catch (NumberFormatException e) {
+			respond(t, formatError(method, query, "Invalid event ID."), 400);
+			return;
+		}
+		if (paths.length >= pathOffset + 3) {
+			switch (paths[pathOffset + 2]) {
 			case "comments":
-				eventCommentsVerb(t, method, paths, query);
+				eventCommentsVerb(t, method, paths, query, body, eventID);
 				break;
+			default:
+				respond(t, formatError(method, query, "Unknown verb '" + paths[pathOffset + 1] + "'."), 404);
 			}
+		}
+		else {
+			switch (method) {
+			case "GET": {
+				Statement stmt = this.db.createStatement();
+				ResultSet rs = stmt.executeQuery("SELECT * FROM Events WHERE id = " + eventID);
+				if (!rs.next())
+					respond(t, formatError(method, query, "Event does not exist."), 400);
+				else
+					respond(t, eventResultToJSON(rs).toString(), 200);
+			}
+			break;
+			default:
+				respond(t, formatError(method, query, "Invalid method."), 404);
+			}
+		}
+	}
+
+	private void eventsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body) throws IOException, SQLException {
+		if (paths.length > pathOffset + 1) {
+			respond(t, formatError(method, query, "Unknown request."), 404);
+			return;
 		}
 		switch (method) {
-		case "GET": {
-			try {
-				String sID = query.get("id");
-				if (sID == null)
-					respond(t, formatError(method, query, "Missing argument 'id'."), 400);
-				else {
-					int id = Integer.parseInt(sID);
-					Statement stmt = this.db.createStatement();
-					ResultSet rs = stmt.executeQuery("SELECT * FROM Events WHERE id = " + id);
-					if (!rs.next())
-						respond(t, formatError(method, query, "Event does not exist."), 400);
-					else
-						respond(t, eventResultToJSON(rs).toString(), 200);
-				}
-			} catch (NumberFormatException e) {
-				respond(t, formatError(method, query, "Invalid request parameters."), 400);
-			}
-		}
-		break;
+		case "GET":
+			eventListVerb(t, method, paths, query);
+			break;
 		case "PUT":
-			eventCreate(t, method, query, body);
+			eventCreate(t, method, paths, query, body);
 			break;
 		default:
 			respond(t, formatError(method, query, "Invalid method."), 404);
 		}
 	}
 
-	private void eventCreate(HttpExchange t, String method, Map<String, String> query, String body)
+	private void eventCreate(HttpExchange t, String method, String[] paths, Map<String, String> query, String body)
 			throws IOException, SQLException {
 		try {
 			JSONObject jo = new JSONObject(body).getJSONObject("create_event");
@@ -150,30 +180,6 @@ public class API implements HttpHandler {
 			return;
 		}
 
-	}
-
-	private void commentEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body) throws IOException, SQLException {
-		switch (method) {
-		case "PUT": {
-			try {
-				JSONObject jo = new JSONObject(body).getJSONObject("create_comment");
-				PreparedStatement stmt = this.db.prepareStatement(
-						"INSERT INTO Comments (event, message) VALUES (?, ?)");
-				stmt.setInt(1, jo.getInt("eventid"));
-				stmt.setString(2, jo.getString("message"));
-
-				if (stmt.executeUpdate() == 0)
-					respond(t, formatError(method, query, "Invalid request parameters."), 400);
-				else
-					respond(t, formatSuccess(method, query), 200);
-			} catch (JSONException e) {
-				respond(t, formatError(method, query, "Invalid request body."), 400);
-			}
-		}
-		break;
-		default:
-			respond(t, formatError(method, query, "Invalid method."), 404);
-		}
 	}
 
 	private String findMissingArgument(Map<String, String> query, String... requireds) {
@@ -219,33 +225,45 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventCommentsVerb(HttpExchange t, String method, String[] paths, Map<String, String> query) throws IOException, SQLException {
-		if (!method.equals("GET")) {
+	private void eventCommentsVerb(HttpExchange t, String method, String[] paths, Map<String, String> query, String body, int eventID) throws IOException, SQLException {
+		switch (method) {
+		case "GET": {
+			PreparedStatement stmt = this.db.prepareStatement("SELECT * FROM Comments WHERE Comments.event = ? ORDER BY datetime DESC");
+			stmt.setInt(1, eventID);
+			ResultSet rs = stmt.executeQuery();
+			JSONArray ja = new JSONArray();
+			while (rs.next()) {
+				ja.put(commentResultToJSON(rs));
+			}
+			respond(t, ja.toString(), 200);
+			rs.close();
+			stmt.close();
+			break;
+		}
+		case "PUT": {
+			try {
+				JSONObject jo = new JSONObject(body).getJSONObject("create_comment");
+				PreparedStatement stmt = this.db.prepareStatement(
+						"INSERT INTO Comments (event, message) VALUES (?, ?)");
+				stmt.setInt(1, jo.getInt("eventid"));
+				stmt.setString(2, jo.getString("message"));
+
+				if (stmt.executeUpdate() == 0)
+					respond(t, formatError(method, query, "Invalid request parameters."), 400);
+				else
+					respond(t, formatSuccess(method, query), 200);
+			} catch (JSONException e) {
+				respond(t, formatError(method, query, "Invalid request body."), 400);
+			}
+			break;
+		}
+		default: {
 			String response = formatError(method, query, "Invalid method.");
 			respond(t, response, 404);
-		} else {
-			try {
-				String sID = query.get("eventid");
-				if (sID == null)
-					respond(t, formatError(method, query, "Missing argument 'eventid'."), 400);
-				else {
-					PreparedStatement stmt = this.db.prepareStatement("SELECT * FROM Comments WHERE Comments.event = ? ORDER BY datetime DESC");
-					stmt.setInt(1, Integer.parseInt(sID));
-					ResultSet rs = stmt.executeQuery();
-					JSONArray ja = new JSONArray();
-					while (rs.next()) {
-						ja.put(commentResultToJSON(rs));
-					}
-					respond(t, ja.toString(), 200);
-					rs.close();
-					stmt.close();
-				}
-			} catch (NumberFormatException e) {
-				respond(t, formatError(method, query, "Invalid request parameters."), 400);
-			}
+		}
 		}
 	}
-	
+
 	private JSONObject commentResultToJSON(ResultSet rs) throws JSONException, SQLException {
 		JSONObject jo = new JSONObject();
 		jo.put("id", rs.getInt("id"));

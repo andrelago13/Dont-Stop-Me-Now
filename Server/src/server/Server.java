@@ -26,7 +26,7 @@ public class Server {
 	private Server() throws Exception {
 		HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
 		//server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
-		server.createContext("/api", new API());
+		server.createContext("/api", new API(1));
 		server.setExecutor(null);
 		server.start();
 	}
