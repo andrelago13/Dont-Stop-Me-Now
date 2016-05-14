@@ -281,6 +281,7 @@ public class API implements HttpHandler {
 				respond(t, formatError(method, query, "Event not found."), 404);
 			}
 			rs.close();
+			break;
 		}
 		case "PUT": {
 			PreparedStatement stmt = this.db.prepareStatement("UPDATE Events SET photo = ? WHERE id = ?");
