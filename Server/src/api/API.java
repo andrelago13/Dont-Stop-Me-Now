@@ -115,10 +115,10 @@ public class API implements HttpHandler {
 		if (paths.length >= pathOffset + 3) { //events/<id>/...
 			switch (paths[pathOffset + 2]) {
 			case "comments":
-				eventCommentsVerb(t, method, paths, query, body, eventID);
+				eventCommentsEndpoint(t, method, paths, query, body, eventID);
 				break;
-			case "confirm":
-				eventConfirmVerb(t, method, paths, query, body, eventID);
+			case "confirmations":
+				eventConfirmationsEndpoint(t, method, paths, query, body, eventID);
 				break;
 			default:
 				respond(t, formatError(method, query, "Unknown verb '" + paths[pathOffset + 1] + "'."), 404);
@@ -128,7 +128,7 @@ public class API implements HttpHandler {
 			switch (method) {
 			case "GET": {
 				Statement stmt = this.db.createStatement();
-				ResultSet rs = stmt.executeQuery("SELECT *, coords[0] AS latitude, coords[1] AS longitude FROM Events WHERE id = " + eventID);
+				ResultSet rs = stmt.executeQuery("SELECT *, ST_X(coords::geometry) AS longitude, ST_Y(coords::geometry) AS latitude FROM Events WHERE id = " + eventID);
 				if (!rs.next())
 					respond(t, formatError(method, query, "Event does not exist."), 400);
 				else
@@ -146,21 +146,22 @@ public class API implements HttpHandler {
 		try {
 			JSONObject jo = new JSONObject(body).getJSONObject("create_event");
 			PreparedStatement stmt = this.db.prepareStatement(
-					"INSERT INTO Events (type, description, location, coords) VALUES (?, ?, ?, Point(?, ?))");
-			stmt.setInt(1, jo.getInt("type"));
-			stmt.setString(2, jo.getString("description"));
+					"INSERT INTO Events (creator, type, description, location, coords) VALUES (?, ?, ?, ?, Geography(Point(?, ?)::geometry))");
+			stmt.setInt(1, 1); // TODO;
+			stmt.setInt(2, jo.getInt("type"));
+			stmt.setString(3, jo.getString("description"));
 
 			if (jo.has("location"))
-				stmt.setString(3, jo.getString("location"));
+				stmt.setString(4, jo.getString("location"));
 			else
-				stmt.setNull(3, java.sql.Types.NULL);
-
-			if (jo.has("latitude") && jo.has("longitude")) {
-				stmt.setFloat(4, (float)jo.getDouble("latitude"));
-				stmt.setFloat(5, (float)jo.getDouble("longitude"));
-			} else {
-				stmt.setNull(4, java.sql.Types.NULL);
 				stmt.setNull(5, java.sql.Types.NULL);
+
+			if (jo.has("longitude") && jo.has("latitude")) {
+				stmt.setFloat(5, (float)jo.getDouble("longitude"));
+				stmt.setFloat(6, (float)jo.getDouble("latitude"));
+			} else {
+				stmt.setNull(5, java.sql.Types.NULL);
+				stmt.setNull(6, java.sql.Types.NULL);
 			}
 
 			if (stmt.executeUpdate() == 0)
@@ -187,15 +188,20 @@ public class API implements HttpHandler {
 		jo.put("id", rs.getInt("id"));
 		jo.put("type", rs.getInt("type"));
 		jo.put("description", rs.getString("description"));
+		try {
+			rs.getString("distance");
+			jo.put("distance", rs.getFloat("distance"));
+		} catch (SQLException e) {
+		}
 
 		String location = rs.getString("location");
-		String latitude = rs.getString("latitude");
 		String longitude = rs.getString("longitude");
+		String latitude = rs.getString("latitude");
 		if (location != null)
 			jo.put("location", location);
-		if (latitude != null && longitude != null) {
-			jo.put("latitude", latitude);
+		if (longitude != null && latitude != null) {
 			jo.put("longitude", longitude);
+			jo.put("latitude", latitude);
 		}
 
 		jo.put("datetime", rs.getTimestamp("datetime"));
@@ -208,8 +214,35 @@ public class API implements HttpHandler {
 			String response = formatError(method, query, "Invalid method.");
 			respond(t, response, 404);
 		} else {
-			Statement stmt = this.db.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT *, coords[0] AS latitude, coords[1] AS longitude FROM Events ORDER BY datetime DESC");
+			ResultSet rs;
+			Statement stmt;
+			if (query.get("longitude") == null || query.get("latitude") == null) {
+				stmt = this.db.createStatement();
+				rs = stmt.executeQuery("SELECT *, ST_X(coords::geometry) AS longitude, ST_Y(coords::geometry) AS latitude FROM Events ORDER BY datetime DESC");
+			} else {
+				Float radius = null;
+				if (query.get("radius") != null) 
+				{
+					try { radius = Float.parseFloat(query.get("radius")); }
+					catch (NumberFormatException e) {};
+				}
+				stmt = this.db.prepareStatement("SELECT *,"
+						+ " ST_X(coords::geometry) AS longitude, ST_Y(coords::geometry) AS latitude, ST_DISTANCE(coords, Geography(Point(?, ?)::geometry)) AS distance"
+						+ " FROM Events"
+						+ ((radius == null) ? "" : " WHERE ST_DWithin(coords, Geography(Point(?, ?)::geometry), ?)")
+						+ " ORDER BY datetime DESC");
+				PreparedStatement ps = (PreparedStatement)stmt;
+				float longitude = Float.parseFloat(query.get("longitude"));
+				float latitude = Float.parseFloat(query.get("latitude"));
+				ps.setFloat(1, longitude);
+				ps.setFloat(2, latitude);
+				if (radius != null) {
+					ps.setFloat(3, longitude);
+					ps.setFloat(4, latitude);
+					ps.setFloat(5, radius);
+				}
+				rs = ps.executeQuery();
+			}
 			JSONArray ja = new JSONArray();
 			while (rs.next()) {
 				ja.put(eventResultToJSON(rs));
@@ -220,7 +253,7 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventCommentsVerb(HttpExchange t, String method, String[] paths, Map<String, String> query, String body, int eventID) throws IOException, SQLException {
+	private void eventCommentsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body, int eventID) throws IOException, SQLException {
 		switch (method) {
 		case "GET": {
 			PreparedStatement stmt = this.db.prepareStatement("SELECT * FROM Comments WHERE Comments.event = ? ORDER BY datetime DESC");
@@ -259,7 +292,7 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventConfirmVerb(HttpExchange t, String method, String[] paths, Map<String, String> query, String body, int eventID) throws IOException, SQLException {
+	private void eventConfirmationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body, int eventID) throws IOException, SQLException {
 		switch (method) {
 		case "PUT": {
 			try {

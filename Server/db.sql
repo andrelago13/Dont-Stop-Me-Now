@@ -22,7 +22,7 @@ CREATE TABLE events
 	type EVENTTYPE NOT NULL,
 	description TEXT NOT NULL,
 	location TEXT,
-	coords POINT,
+	coords GEOGRAPHY(POINT,4326),
 	datetime TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP),
 	positiveconfirmations INT NOT NULL DEFAULT 0,
 	negativeconfirmations INT NOT NULL DEFAULT 0,
@@ -92,6 +92,6 @@ CREATE TRIGGER update_confirmations
 	EXECUTE PROCEDURE update_confirmations();
 
 INSERT INTO users (facebookID) VALUES ('100000416538494');
-INSERT INTO events (creator, type, description, location) VALUES (1, 0, 'Toyota azul com radar.', 'Em frente à Makro, na Via Norte, sentido Porto - Maia.');
+INSERT INTO events (creator, type, description, location, coords) VALUES (1, 0, 'Toyota azul com radar.', 'Em frente à Makro, na Via Norte, sentido Porto - Maia.', ST_GeomFromText('POINT(-8.6273612 41.2018094)'));
 INSERT INTO comments (writer, event, message) VALUES (1, 1, 'Test comment.');
 INSERT INTO confirmations (creator, event, type) VALUES (1, 1, TRUE);
