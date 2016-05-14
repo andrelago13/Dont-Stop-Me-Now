@@ -19,6 +19,8 @@ import com.facebook.login.widget.LoginButton;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final static int RECENT_EVENTS_CODE = 1234;
+
     public final static String CURRENT_TOKEN = "MainActivity.CURRENT_TOKEN";
 
     private CallbackManager callbackManager;
@@ -74,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private void launchRecentEvents() {
         Intent intent = new Intent(this, RecentEventsActivity.class);
         intent.putExtra(CURRENT_TOKEN, AccessToken.getCurrentAccessToken().getToken());
-        startActivity(intent);
+        startActivityForResult(intent, RECENT_EVENTS_CODE);
     }
 
     private void initTokenTracker() {
@@ -145,10 +147,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void updateEnterButtonVisibility() {
+        if(isFacebookLoggedIn()) {
+            enterButton.setVisibility(View.VISIBLE);
+        } else {
+            enterButton.setVisibility(View.INVISIBLE);
+        }
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
+        Log.d("Login Activity", "Activity result triggered.");
+        updateEnterButtonVisibility();
     }
 
     @Override
