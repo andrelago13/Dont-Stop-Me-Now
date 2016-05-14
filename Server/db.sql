@@ -23,6 +23,7 @@ CREATE TABLE events
 	description TEXT NOT NULL,
 	location TEXT,
 	coords GEOGRAPHY(POINT,4326),
+	photo BYTEA,
 	datetime TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP),
 	positiveconfirmations INT NOT NULL DEFAULT 0,
 	negativeconfirmations INT NOT NULL DEFAULT 0,
