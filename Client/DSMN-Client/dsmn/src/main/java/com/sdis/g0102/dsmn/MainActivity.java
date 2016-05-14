@@ -22,6 +22,8 @@ import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import java.util.Arrays;
+
 public class MainActivity extends AppCompatActivity {
 
     public final static String CURRENT_TOKEN = "MainActivity.CURRENT_TOKEN";
@@ -53,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
         initLoginButtonCallbacks();
         initTokenTracker();
     }
+
+
+
+
 
     private void launchRecentEvents() {
         Intent intent = new Intent(this, RecentEventsActivity.class);
