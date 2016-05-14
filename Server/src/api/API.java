@@ -1,5 +1,6 @@
 package api;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+
+import javax.sql.rowset.serial.SerialBlob;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -67,11 +70,13 @@ public class API implements HttpHandler {
 		}
 
 		InputStream is = t.getRequestBody();
-		Scanner s = new Scanner(is);
-		s.useDelimiter("\\A");
-		String body = s.hasNext() ? s.next() : "";
-		s.close();
-		is.close();
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		int b;
+		while ((b = is.read()) != -1) {
+			buffer.write(b);
+		}
+		buffer.flush();
+		byte[] body = buffer.toByteArray();
 
 		switch (paths[pathOffset]) {
 		case "events":
@@ -90,7 +95,7 @@ public class API implements HttpHandler {
 		return true;
 	}
 
-	private void eventsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body)
+	private void eventsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body)
 			throws IOException, SQLException {
 		if (paths.length < pathOffset + 2) { //events/
 			switch (method) {
@@ -141,7 +146,7 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventCreate(HttpExchange t, String method, String[] paths, Map<String, String> query, String body)
+	private void eventCreate(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body)
 			throws IOException, SQLException {
 		try {
 			JSONObject jo = new JSONObject(body).getJSONObject("create_event");
@@ -253,7 +258,39 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventCommentsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body, int eventID) throws IOException, SQLException {
+	private void eventPhotoEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID) throws IOException, SQLException {
+		switch (method) {
+		case "PUT": {
+			PreparedStatement stmt = this.db.prepareStatement("UPDATE Events SET photo = ? WHERE id = ?");
+			stmt.setBlob(1, new SerialBlob(body));
+			stmt.setInt(2, eventID);
+
+			if (stmt.executeUpdate() == 0)
+				respond(t, formatError(method, query, "Invalid request parameters."), 400);
+			else
+				respond(t, formatSuccess(method, query), 200);
+			
+			break;
+		}
+		case "DELETE": {
+			PreparedStatement stmt = this.db.prepareStatement("UPDATE Events SET photo = NULL WHERE id = ?");
+			stmt.setInt(1, eventID);
+
+			if (stmt.executeUpdate() == 0)
+				respond(t, formatError(method, query, "Invalid request parameters."), 400);
+			else
+				respond(t, formatSuccess(method, query), 200);
+			
+			break;
+		}
+		default: {
+			String response = formatError(method, query, "Invalid method.");
+			respond(t, response, 404);
+		}
+		}
+	}
+
+	private void eventCommentsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID) throws IOException, SQLException {
 		switch (method) {
 		case "GET": {
 			PreparedStatement stmt = this.db.prepareStatement("SELECT * FROM Comments WHERE Comments.event = ? ORDER BY datetime DESC");
@@ -292,7 +329,7 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventConfirmationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, String body, int eventID) throws IOException, SQLException {
+	private void eventConfirmationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID) throws IOException, SQLException {
 		switch (method) {
 		case "PUT": {
 			try {
