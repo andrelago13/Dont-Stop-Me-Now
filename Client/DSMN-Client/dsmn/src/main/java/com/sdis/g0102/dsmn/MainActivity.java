@@ -1,17 +1,12 @@
 package com.sdis.g0102.dsmn;
 
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -19,11 +14,8 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
-import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-
-import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     private AlertDialog cancelDialog;
     private AlertDialog errorDialog;
 
+    private Button enterButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         callbackManager = CallbackManager.Factory.create();
 
-        initGetInButton();
+        initEnterButton();
         initAlerts();
         initLoginButtonCallbacks();
         initTokenTracker();
@@ -55,16 +49,18 @@ public class MainActivity extends AppCompatActivity {
         if(isFacebookLoggedIn()) {
             // Already logged in with facebook
             Log.d("Facebook Login", "Login already active. Launching \"Recent Events\".");
+            enterButton.setVisibility(View.VISIBLE);
             launchRecentEvents();
         } else {
             // No login active when app was started
             Log.d("Facebook Login", "No Facebook login detected. Continuing.");
+            enterButton.setVisibility(View.INVISIBLE);
         }
     }
 
-    private void initGetInButton() {
-        final Button button = (Button) findViewById(R.id.getin_button);
-        button.setOnClickListener(new View.OnClickListener() {
+    private void initEnterButton() {
+        enterButton = (Button) findViewById(R.id.enter_button);
+        enterButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if(isFacebookLoggedIn()) {
                     launchRecentEvents();
@@ -108,18 +104,21 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(LoginResult loginResult) {
                 Log.d("Facebook Login", "Success");
                 launchRecentEvents();
+                enterButton.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onCancel() {
                 Log.d("Facebook Login", "Cancel");
                 cancelDialog.show();
+                enterButton.setVisibility(View.INVISIBLE);
             }
 
             @Override
             public void onError(FacebookException exception) {
                 Log.d("Facebook Login", "Error");
                 errorDialog.show();
+                enterButton.setVisibility(View.INVISIBLE);
             }
         });
     }
@@ -162,6 +161,5 @@ public class MainActivity extends AppCompatActivity {
         if(accessTokenTracker != null)
             accessTokenTracker.stopTracking();
     }
-
 
 }
