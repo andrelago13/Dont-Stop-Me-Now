@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/scroll_view"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.sdis.g0102.dsmn.RecentEventsActivity"
     tools:showIn="@layout/activity_recent_events">

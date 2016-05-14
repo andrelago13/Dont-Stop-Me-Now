@@ -16,16 +16,7 @@
         android:id="@+id/maintitle"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="62dp"
-        android:textSize="35sp"
-        android:fontFamily="sans-serif-medium"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:shadowColor="#888888"
-        android:shadowDx="5"
-        android:shadowDy="5"
-        android:shadowRadius="10"
-        android:singleLine="false"/>
+        android:layout_marginTop="62dp" />
 
     <com.facebook.login.widget.LoginButton
         android:id="@+id/login_button_2"
@@ -36,4 +27,12 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter"
+        android:id="@+id/enter_button"
+        android:layout_marginBottom="33dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>
