@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -41,6 +42,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         callbackManager = CallbackManager.Factory.create();
 
+        initGetInButton();
+        initAlerts();
+        initLoginButtonCallbacks();
+        initTokenTracker();
+
+        detectInitialLaunch();
+    }
+
+    private void detectInitialLaunch() {
         // Used to detect if login is active at startup
         if(isFacebookLoggedIn()) {
             // Already logged in with facebook
@@ -50,15 +60,20 @@ public class MainActivity extends AppCompatActivity {
             // No login active when app was started
             Log.d("Facebook Login", "No Facebook login detected. Continuing.");
         }
-
-        initAlerts();
-        initLoginButtonCallbacks();
-        initTokenTracker();
     }
 
-
-
-
+    private void initGetInButton() {
+        final Button button = (Button) findViewById(R.id.getin_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if(isFacebookLoggedIn()) {
+                    launchRecentEvents();
+                } else {
+                    cancelDialog.show();
+                }
+            }
+        });
+    }
 
     private void launchRecentEvents() {
         Intent intent = new Intent(this, RecentEventsActivity.class);
@@ -116,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setMessage("Facebook login is required to use this app.");
         cancelDialog = builder.create();
         builder.setTitle("Error");
-        builder.setMessage("An error has occurred with Facebook login. Please try again later.");
+        builder.setMessage("An error has occurred with Facebook login. Please make sure you have an active internet connection and try again later.");
         errorDialog = builder.create();
     }
 
@@ -147,4 +162,6 @@ public class MainActivity extends AppCompatActivity {
         if(accessTokenTracker != null)
             accessTokenTracker.stopTracking();
     }
+
+
 }
