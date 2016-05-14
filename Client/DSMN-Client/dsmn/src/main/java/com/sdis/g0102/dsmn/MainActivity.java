@@ -18,10 +18,13 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
 public class MainActivity extends AppCompatActivity {
+
+    public final static String CURRENT_TOKEN = "MainActivity.CURRENT_TOKEN";
 
     private CallbackManager callbackManager;
     private AccessTokenTracker accessTokenTracker;
@@ -34,53 +37,30 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_main);
-
         callbackManager = CallbackManager.Factory.create();
 
         // Used to detect if login is active at startup
-        AccessToken at = AccessToken.getCurrentAccessToken();
-        if(at == null || at.getToken() == null) {
-            // No login active when app was started
-            Log.d("Test", "No login");
-        } else {
+        if(isFacebookLoggedIn()) {
             // Already logged in with facebook
-            Log.d("Test", at.getToken());
+            Log.d("Facebook Login", "Login already active. Launching \"Recent Events\".");
+            launchRecentEvents();
+        } else {
+            // No login active when app was started
+            Log.d("Facebook Login", "No Facebook login detected. Continuing.");
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setPositiveButton("OK", null);
-        builder.setTitle("Warning");
-        builder.setMessage("Facebook login is required to use this app.");
-        cancelDialog = builder.create();
-        builder.setTitle("Error");
-        builder.setMessage("An error has occurred with Facebook login. Please try again later.");
-        errorDialog = builder.create();
+        initAlerts();
+        initLoginButtonCallbacks();
+        initTokenTracker();
+    }
 
-        LoginButton loginButton = (LoginButton) this.findViewById(R.id.login_button_2);
-        loginButton.setReadPermissions("email");
+    private void launchRecentEvents() {
+        Intent intent = new Intent(this, RecentEventsActivity.class);
+        intent.putExtra(CURRENT_TOKEN, AccessToken.getCurrentAccessToken().getToken());
+        startActivity(intent);
+    }
 
-        // Callback registration, results of clicking button
-        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                Log.d("Facebook Login", "Success");
-                //LoginManager.getInstance().logInWithReadPermissions(this_t, Arrays.asList("public_profile"));
-                Log.d("Facebook Token", AccessToken.getCurrentAccessToken().getToken());
-            }
-
-            @Override
-            public void onCancel() {
-                Log.d("Facebook Login", "Cancel");
-                cancelDialog.show();
-            }
-
-            @Override
-            public void onError(FacebookException exception) {
-                Log.d("Facebook Login", "Error");
-                errorDialog.show();
-            }
-        });
-
+    private void initTokenTracker() {
         // Used to monitor token changing
         accessTokenTracker = new AccessTokenTracker() {
             @Override
@@ -97,6 +77,54 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+    private void initLoginButtonCallbacks() {
+        LoginButton loginButton = (LoginButton) this.findViewById(R.id.login_button_2);
+        loginButton.setReadPermissions("email");
+
+        // Callback registration, results of clicking button
+        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                Log.d("Facebook Login", "Success");
+                launchRecentEvents();
+            }
+
+            @Override
+            public void onCancel() {
+                Log.d("Facebook Login", "Cancel");
+                cancelDialog.show();
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
+                Log.d("Facebook Login", "Error");
+                errorDialog.show();
+            }
+        });
+    }
+
+    private void initAlerts() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setPositiveButton("OK", null);
+        builder.setTitle("Warning");
+        builder.setMessage("Facebook login is required to use this app.");
+        cancelDialog = builder.create();
+        builder.setTitle("Error");
+        builder.setMessage("An error has occurred with Facebook login. Please try again later.");
+        errorDialog = builder.create();
+    }
+
+    private boolean isFacebookLoggedIn() {
+        AccessToken at = AccessToken.getCurrentAccessToken();
+        if(at == null || at.getToken() == null) {
+            // No login active
+            return false;
+        } else {
+            // Already logged in with facebook
+            return true;
+        }
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -106,6 +134,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        Log.d("Test", "Destroyed");
 
         // required by Facebook
         if(accessTokenTracker != null)
