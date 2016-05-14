@@ -7,11 +7,21 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.sdis.g0102.dsmn.MainActivity">
 
-    <fragment
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:name="com.sdis.g0102.dsmn.facebook.CustomFacebookFragment"
-        android:id="@+id/fragment"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Don&apos;t Stop Me Now"
+        android:id="@+id/maintitle"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="62dp" />
+
+    <com.facebook.login.widget.LoginButton
+        android:id="@+id/login_button_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="30dp" />
 </RelativeLayout>
