@@ -14,9 +14,17 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.SimpleAdapter;
 
 import com.facebook.login.LoginManager;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class RecentEventsActivity extends AppCompatActivity {
 
@@ -32,6 +40,15 @@ public class RecentEventsActivity extends AppCompatActivity {
         initCollapsingToolbarLayout();
         initFloatingActionButton();
         initDialogs();
+
+
+        LinearLayout ll = (LinearLayout) findViewById(R.id.recent_events_linearlayout);
+
+        for(int i = 0; i < 20; ++i) {
+            RecentEventView b = new RecentEventView(this);
+
+            ll.addView(b);
+        }
     }
 
     private void initDialogs() {
