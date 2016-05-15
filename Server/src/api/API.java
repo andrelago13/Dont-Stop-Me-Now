@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -61,8 +62,6 @@ public class API implements HttpHandler {
 
 	private void process(HttpExchange t, String method, String[] paths, Map<String, String> query)
 			throws IOException, SQLException {
-		Headers h = t.getResponseHeaders();
-		h.add("Content-Type", "application/json");
 
 		if (!checkAuth(t)) {
 			respond(t, formatError(method, null, "Authentication failed"), 401);
@@ -125,6 +124,8 @@ public class API implements HttpHandler {
 			case "confirmations":
 				eventConfirmationsEndpoint(t, method, paths, query, body, eventID);
 				break;
+			case "photo":
+				eventPhotoEndpoint(t, method, paths, query, body, eventID);
 			default:
 				respond(t, formatError(method, query, "Unknown verb '" + paths[pathOffset + 1] + "'."), 404);
 			}
@@ -260,16 +261,38 @@ public class API implements HttpHandler {
 
 	private void eventPhotoEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID) throws IOException, SQLException {
 		switch (method) {
+		case "GET": {
+			PreparedStatement stmt = this.db.prepareStatement("SELECT photo FROM events WHERE id = ?");
+			stmt.setInt(1, eventID);
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next()) {
+				byte[] photo = rs.getBytes("photo");
+				if (rs.wasNull()) {
+					respond(t, formatError(method, query, "Event has no photo."), 404);
+				} else {
+					Headers h = t.getResponseHeaders();
+					h.add("Content-Type", "image/jpeg");
+					t.sendResponseHeaders(200, photo.length);
+					OutputStream os = t.getResponseBody();
+					os.write(photo);
+					os.close();
+				}
+			} else {
+				respond(t, formatError(method, query, "Event not found."), 404);
+			}
+			rs.close();
+			break;
+		}
 		case "PUT": {
 			PreparedStatement stmt = this.db.prepareStatement("UPDATE Events SET photo = ? WHERE id = ?");
-			stmt.setBlob(1, new SerialBlob(body));
+			stmt.setBytes(1, body);
 			stmt.setInt(2, eventID);
 
 			if (stmt.executeUpdate() == 0)
 				respond(t, formatError(method, query, "Invalid request parameters."), 400);
 			else
 				respond(t, formatSuccess(method, query), 200);
-			
+
 			break;
 		}
 		case "DELETE": {
@@ -280,7 +303,7 @@ public class API implements HttpHandler {
 				respond(t, formatError(method, query, "Invalid request parameters."), 400);
 			else
 				respond(t, formatSuccess(method, query), 200);
-			
+
 			break;
 		}
 		default: {
@@ -412,6 +435,8 @@ public class API implements HttpHandler {
 	}
 
 	private void respond(HttpExchange t, String response, int code) throws IOException {
+		Headers h = t.getResponseHeaders();
+		h.add("Content-Type", "application/json");
 		t.sendResponseHeaders(200, response.getBytes().length);
 		OutputStream os = t.getResponseBody();
 		os.write(response.getBytes());
