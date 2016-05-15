@@ -16,7 +16,16 @@
         android:id="@+id/maintitle"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="62dp" />
+        android:layout_marginTop="62dp"
+        android:textSize="35sp"
+        android:fontFamily="sans-serif-medium"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:shadowColor="#888888"
+        android:shadowDx="5"
+        android:shadowDy="5"
+        android:shadowRadius="10"
+        android:singleLine="false"/>/>
 
     <com.facebook.login.widget.LoginButton
         android:id="@+id/login_button_2"
