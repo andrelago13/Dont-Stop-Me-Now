@@ -91,6 +91,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("Facebook Login", "Token change");
                 if(currentAccessToken == null) {
                     Log.d("Facebook Login", "Logged out");
+                    enterButton.setVisibility(View.INVISIBLE);
+                } else {
+                    enterButton.setVisibility(View.VISIBLE);
                 }
                 // Set the access token using
                 // currentAccessToken when it's loaded or set.
