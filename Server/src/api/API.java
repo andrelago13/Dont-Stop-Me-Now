@@ -136,9 +136,17 @@ public class API implements HttpHandler {
 				Statement stmt = this.db.createStatement();
 				ResultSet rs = stmt.executeQuery("SELECT *, ST_X(coords::geometry) AS longitude, ST_Y(coords::geometry) AS latitude FROM Events WHERE id = " + eventID);
 				if (!rs.next())
-					respond(t, formatError(method, query, "Event does not exist."), 400);
+					respond(t, formatError(method, query, "Event does not exist."), 404);
 				else
 					respond(t, eventResultToJSON(rs).toString(), 200);
+			}
+			break;
+			case "DELETE": {
+				Statement stmt = this.db.createStatement();
+				if (stmt.executeUpdate("DELETE FROM Events WHERE id = " + eventID) == 0)
+					respond(t, formatError(method, query, "Event does not exist."), 404);
+				else
+					respond(t, formatSuccess(method, query), 200);
 			}
 			break;
 			default:
