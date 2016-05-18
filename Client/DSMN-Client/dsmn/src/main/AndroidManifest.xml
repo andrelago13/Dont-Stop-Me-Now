@@ -29,7 +29,8 @@
         <activity
             android:name=".RecentEventsActivity"
             android:label="@string/title_activity_recent_events"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".EventDetailsActivity"></activity>
     </application>
 
 </manifest>

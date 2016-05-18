@@ -45,7 +45,7 @@ public class RecentEventsActivity extends AppCompatActivity {
         LinearLayout ll = (LinearLayout) findViewById(R.id.recent_events_linearlayout);
 
         for(int i = 0; i < 20; ++i) {
-            RecentEventView b = new RecentEventView(this);
+            RecentEventView b = new RecentEventView(this, null, 0, "desc", "addr", R.drawable.event_camera);
 
             ll.addView(b);
         }
@@ -94,6 +94,10 @@ public class RecentEventsActivity extends AppCompatActivity {
         });
     }
 
+    public void refreshList() {
+        // TODO acabar
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -105,6 +109,10 @@ public class RecentEventsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId())
         {
+            case R.id.recent_events_menu_refresh:
+                Log.d("RecentEvents", "\"Refresh\" pressed");
+                this.refreshList();
+                break;
             case R.id.recent_events_menu_about:
                 Log.d("RecentEvents", "\"About\" pressed");
                 break;

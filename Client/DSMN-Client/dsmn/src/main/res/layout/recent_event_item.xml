@@ -2,20 +2,49 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="horizontal"
+    android:id="@+id/event_layout">
 
-    <TextView
-        android:id="@+id/title"
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:id="@+id/event_icon"
+        android:src="@drawable/event_crash"
+        android:layout_weight="6"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:maxHeight="10dp" />
+
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="hello"/>
+        android:layout_weight="1">
 
-    <TextView
-        android:id="@+id/description"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="helloooooooo"/>
+        <TextView
+            android:id="@+id/event_description"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Description"
+            android:gravity="left|center_vertical"
+            android:paddingStart="6dp"
+            android:maxLines="3"
+            android:paddingLeft="2dp"
+            android:paddingRight="2dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/event_address"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Street of Streets 123, Springfield"
+            android:gravity="center_vertical|center_horizontal"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:layout_weight="2"
+            android:maxLines="1" />
+    </LinearLayout>
 
 </LinearLayout>
