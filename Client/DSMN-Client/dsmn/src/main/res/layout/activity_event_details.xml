@@ -99,6 +99,33 @@
             android:layout_gravity="center"
             android:src="@mipmap/event_confirm_false" />
     </LinearLayout>
+
+    <!-- Dummy item to prevent AutoCompleteTextView from receiving focus -->
+    <LinearLayout
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_width="0px"
+        android:layout_height="0px"/>
+
+    <EditText
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textMultiLine"
+        android:ems="10"
+        android:id="@+id/new_comment_edittext"
+        android:layout_gravity="top"
+        android:maxLength="400"
+        android:maxLines="6"
+        android:nextFocusUp="@id/new_comment_edittext"
+        android:nextFocusLeft="@id/new_comment_edittext"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Comment"
+        android:id="@+id/add_comment_button"
+        android:layout_gravity="right"
+        android:onClick="addComment" />
 </LinearLayout>
 
 </ScrollView>

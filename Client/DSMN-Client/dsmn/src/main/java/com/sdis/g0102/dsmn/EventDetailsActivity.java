@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -83,8 +84,6 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void updateButtons() {
-        // TODO setImageResource is slow, maybe change later
-
         switch(confirmState) {
             case TRUE:
                 event_confirm_true_image.setImageResource(R.mipmap.event_confirm_true_selected);
@@ -99,5 +98,13 @@ public class EventDetailsActivity extends AppCompatActivity {
                 event_confirm_false_image.setImageResource(R.mipmap.event_confirm_false);
                 break;
         }
+    }
+
+    public void addComment(View view) {
+        EditText comment = (EditText) findViewById(R.id.new_comment_edittext);
+        String text = comment.getText().toString();
+        comment.setText("");
+
+        // TODO send to api
     }
 }
