@@ -1,12 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.sdis.g0102.dsmn.EventDetailsActivity">
+    tools:context="com.sdis.g0102.dsmn.EventDetailsActivity"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/scrollView" >
 
-</RelativeLayout>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/event_type_icon"
+            android:layout_weight="4"
+            android:paddingLeft="6dp"
+            android:paddingRight="6dp"
+            android:src="@drawable/event_other" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Medium Text aksdhasd asdas dasdfasdf asdfasd fasdfas dfasdf asdfas dfasdf asdf asdfasasasd fasdf asdfas dfas dfasd fasdf asdf asdfas dfasdf asd asd asd asd asda sd asd asd as da sd as da sd afd gasdf g sfdgd fh  dfsghsdf g sdfg sdfgsdf gsdfg asdfdf"
+                android:id="@+id/event_address"
+                android:maxLines="5"
+                android:scrollbars="vertical"
+                android:scrollIndicators="right"
+                android:nestedScrollingEnabled="true" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Small Text asda sdfsd fasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df agasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df asdfas dfawe frdg dfg asdf"
+        android:id="@+id/event_description"
+        android:layout_gravity="center_horizontal"
+        android:scrollIndicators="right"
+        android:maxLines="15"
+        android:scrollbars="vertical"
+        android:paddingTop="20dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:textIsSelectable="false"
+        android:paddingBottom="20dp"
+        android:nestedScrollingEnabled="true" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Confirm event:"
+            android:layout_weight="1"
+            android:textAlignment="gravity"
+            android:gravity="right"
+            android:paddingRight="6dp"
+            android:layout_gravity="center_vertical" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/confirmButtonTrue"
+            android:layout_weight="5"
+            android:layout_gravity="center"
+            android:src="@mipmap/event_confirm_true" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/confirmButtonFalse"
+            android:layout_weight="5"
+            android:layout_gravity="center"
+            android:src="@mipmap/event_confirm_false" />
+    </LinearLayout>
+</LinearLayout>
+
+</ScrollView>

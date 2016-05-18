@@ -41,11 +41,10 @@ public class RecentEventsActivity extends AppCompatActivity {
         initFloatingActionButton();
         initDialogs();
 
-
         LinearLayout ll = (LinearLayout) findViewById(R.id.recent_events_linearlayout);
 
         for(int i = 0; i < 20; ++i) {
-            RecentEventView b = new RecentEventView(this, null, 0, "desc", "addr", R.drawable.event_camera);
+            RecentEventView b = new RecentEventView(this, null, i, "desc", "addr", R.drawable.event_camera);
 
             ll.addView(b);
         }

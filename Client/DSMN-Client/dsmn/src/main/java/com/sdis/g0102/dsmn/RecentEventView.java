@@ -1,6 +1,7 @@
 package com.sdis.g0102.dsmn;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.Image;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -11,12 +12,18 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.facebook.AccessToken;
+
 import java.util.Random;
 
 /**
  * Created by André on 15/05/2016.
  */
 public class RecentEventView extends LinearLayout {
+
+    private final static int EVENT_DETAIL_CODE = 4321;
+
+    public final static String EVENT_ID = "Event.ID";
 
     private ImageView icon;
     private TextView description;
@@ -74,12 +81,16 @@ public class RecentEventView extends LinearLayout {
     }
 
     private void initiateClick() {
+        final Context context = getContext();
         LinearLayout my_layout = (LinearLayout) findViewById(R.id.event_layout);
         my_layout.setOnClickListener(new OnClickListener()
         {
             @Override
             public void onClick(View v) {
-                Log.d("test", "click");
+                Intent intent = new Intent(context, EventDetailsActivity.class);
+                intent.putExtra(EVENT_ID, event_id);
+                context.startActivity(intent);
+                //context.startActivityForResult(intent, EVENT_DETAIL_CODE);
             }
         });
     }
