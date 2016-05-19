@@ -126,6 +126,22 @@
         android:id="@+id/add_comment_button"
         android:layout_gravity="right"
         android:onClick="addComment" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:id="@+id/comments_layout">
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="There are no more events to show..."
+            android:gravity="center_vertical|center_horizontal" />
+    </LinearLayout>
 </LinearLayout>
 
 </ScrollView>

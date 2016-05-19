@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
@@ -32,6 +33,8 @@ public class EventDetailsActivity extends AppCompatActivity {
     private ImageView event_confirm_true_image;
     private ImageView event_confirm_false_image;
 
+    private LinearLayout commentsLayout;
+
     private ConfirmState confirmState = ConfirmState.NONE;
 
     @Override
@@ -45,6 +48,15 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         initTextViewsAppearance();
         initButtons();
+        initCommentsLayout();
+    }
+
+    private void initCommentsLayout() {
+        commentsLayout = (LinearLayout) this.findViewById(R.id.comments_layout);
+
+        for(int i = 0; i < 5; ++i) {
+            commentsLayout.addView(new EventCommentView(this), i);
+        }
     }
 
     private void initTextViewsAppearance() {
