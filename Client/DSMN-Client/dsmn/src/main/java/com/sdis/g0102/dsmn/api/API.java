@@ -2,13 +2,19 @@ package com.sdis.g0102.dsmn.api;
 
 import android.content.Context;
 
+import com.sdis.g0102.dsmn.domain.StreetEvent;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.net.ssl.HostnameVerifier;
@@ -43,20 +49,29 @@ public class API {
 
     public List<StreetEvent> listEvents() {
         try {
-            HttpsURLConnection urlConnection = sendRequest(new URL(this.url + "events/"), "GET", null);
-            if (isHTTPResponseCodeSuccess(urlConnection.getResponseCode()))
-                return null; // TODO
-            else
+            APIResponse response = sendRequest(new URL(this.url + "events/"), "GET", null);
+            if (isHTTPResponseCodeSuccess(response.getCode())) {
+                JSONArray ja = new JSONArray(new String(response.getMessage()));
+                List<StreetEvent> list = new LinkedList<StreetEvent>();
+                for (int i = 0; i < ja.length(); i++) {
+                    JSONObject jo = ja.getJSONObject(i);
+                    StreetEvent streetEvent = new StreetEvent();
+                    list.add(streetEvent);
+                }
+                return list;
+            } else
                 return null;
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
         return null;
     }
 
-    private HttpsURLConnection sendRequest(URL url, String method, byte[] msg) throws GeneralSecurityException {
+    private APIResponse sendRequest(URL url, String method, byte[] msg) throws GeneralSecurityException {
         try {
             // TODO extract this code so it's only run once
 
@@ -80,10 +95,9 @@ public class API {
             InputStream is = urlConnection.getInputStream();
             int n;
             while ((n = is.read()) != -1) baos.write(n);
+            is.close();
 
-            // TODO return code and message
-
-            return urlConnection;
+            return new APIResponse(urlConnection.getResponseCode(), baos.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
             return null;
