@@ -17,6 +17,20 @@ import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.sdis.g0102.dsmn.api.API;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,7 +53,16 @@ public class MainActivity extends AppCompatActivity {
         AppEventsLogger.activateApp(this);
         setContentView(R.layout.activity_main);
         callbackManager = CallbackManager.Factory.create();
-
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    new API(getApplicationContext(), new URL("https://192.168.1.69/api/")).listEvents();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
         initEnterButton();
         initAlerts();
         initLoginButtonCallbacks();

@@ -23,7 +23,7 @@ public class RecentEventView extends LinearLayout {
 
     private final static int EVENT_DETAIL_CODE = 4321;
 
-    public final static String EVENT_ID = "Event.ID";
+    public final static String EVENT_ID = "StreetEvent.ID";
 
     private ImageView icon;
     private TextView description;
