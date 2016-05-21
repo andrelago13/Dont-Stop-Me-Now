@@ -3,9 +3,10 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 -- 0 -> Mobile speed radar --
 -- 1 -> Traffic stop --
 -- 2 -> High traffic area --
+-- 3 -> Car crash --
 DROP DOMAIN IF EXISTS EVENTTYPE CASCADE;
 CREATE DOMAIN EVENTTYPE AS INTEGER
-	CHECK (VALUE IN (0, 1, 2));
+	CHECK (VALUE IN (0, 1, 2, 3));
 
 DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users
