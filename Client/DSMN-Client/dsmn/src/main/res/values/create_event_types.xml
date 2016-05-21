@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="event_types">
+        <item>Vehicle Crash</item>
+        <item>Speed Radar</item>
+        <item>Slow Traffic</item>
+        <item>Traffic Stop</item>
+    </string-array>
+</resources>

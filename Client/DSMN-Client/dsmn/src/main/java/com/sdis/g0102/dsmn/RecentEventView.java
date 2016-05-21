@@ -1,5 +1,6 @@
 package com.sdis.g0102.dsmn;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.media.Image;
@@ -44,7 +45,7 @@ public class RecentEventView extends LinearLayout {
         address = (TextView) findViewById(R.id.event_address);
     }
 
-    public RecentEventView(Context context, AttributeSet attrs, int event_id, String description, String address, int icon_id) {
+    public RecentEventView(Context context, AttributeSet attrs, int event_id, String description, String address, Event.Type type) {
         this(context, attrs);
 
         this.event_id = event_id;
@@ -57,11 +58,24 @@ public class RecentEventView extends LinearLayout {
             this.address.setText(address);
         }
 
-        if(icon_id >= 0) {
-            this.icon.setImageResource(icon_id);
+        if(type != null) {
+            switch(type) {
+                case RADAR:
+                    this.icon.setImageResource(R.drawable.event_camera);
+                    break;
+                case STOP:
+                    this.icon.setImageResource(R.drawable.event_stop);
+                    break;
+                case TRAFFIC:
+                    this.icon.setImageResource(R.drawable.event_traffic);
+                    break;
+                case CRASH:
+                    this.icon.setImageResource(R.drawable.event_crash);
+                    break;
+            }
         } else {
             Random r = new Random();
-            switch(r.nextInt(4)) {
+            switch(r.nextInt(5)) {
                 case 0:
                     this.icon.setImageResource(R.drawable.event_crash);
                     break;
@@ -73,6 +87,9 @@ public class RecentEventView extends LinearLayout {
                     break;
                 case 3:
                     this.icon.setImageResource(R.drawable.event_traffic);
+                    break;
+                case 4:
+                    this.icon.setImageResource(R.drawable.event_stop);
                     break;
             }
         }
@@ -94,4 +111,5 @@ public class RecentEventView extends LinearLayout {
             }
         });
     }
+
 }

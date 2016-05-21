@@ -1,6 +1,7 @@
 package com.sdis.g0102.dsmn;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -21,6 +22,7 @@ import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.SimpleAdapter;
 
+import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
 
 import java.util.ArrayList;
@@ -28,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 
 public class RecentEventsActivity extends AppCompatActivity {
+
+    public final static int CREATE_EVENT_CODE = 1324;
 
     private AlertDialog confirmLogout;
 
@@ -45,7 +49,7 @@ public class RecentEventsActivity extends AppCompatActivity {
         LinearLayout ll = (LinearLayout) findViewById(R.id.recent_events_linearlayout);
 
         for(int i = 0; i < 20; ++i) {
-            RecentEventView b = new RecentEventView(this, null, i, "desc", "addr", R.drawable.event_camera);
+            RecentEventView b = new RecentEventView(this, null, i, "desc", "addr", Event.Type.CRASH);
 
             ll.addView(b);
         }
@@ -85,11 +89,14 @@ public class RecentEventsActivity extends AppCompatActivity {
     }
 
     private void initFloatingActionButton() {
+        final AppCompatActivity this_t = this;
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                Intent intent = new Intent(this_t, CreateEventActivity.class);
+                startActivityForResult(intent, CREATE_EVENT_CODE);
             }
         });
     }
