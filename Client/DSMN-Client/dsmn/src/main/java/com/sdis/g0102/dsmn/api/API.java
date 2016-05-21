@@ -1,8 +1,10 @@
 package com.sdis.g0102.dsmn.api;
 
 import android.content.Context;
+import android.graphics.PointF;
+import android.location.Location;
 
-import com.sdis.g0102.dsmn.domain.StreetEvent;
+import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,6 +16,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,9 +32,12 @@ import javax.net.ssl.TrustManagerFactory;
 public class API {
     private Context context;
     private URL url;
-    public API(Context context, URL url) {
+    private SSLContext sslContext;
+    public API(Context context, URL url) throws GeneralSecurityException, IOException {
         this.context = context;
         this.url = url;
+
+        initSSLContext();
     }
 
     static {
@@ -56,6 +62,20 @@ public class API {
                 for (int i = 0; i < ja.length(); i++) {
                     JSONObject jo = ja.getJSONObject(i);
                     StreetEvent streetEvent = new StreetEvent();
+                    streetEvent.creator = jo.getInt("creator");
+                    int type = jo.getInt("type");
+                    StreetEvent.Type[] seTypes = StreetEvent.Type.values();
+                    if (type > seTypes.length)
+                        return null;
+                    streetEvent.type = seTypes[type];
+                    streetEvent.description = jo.getString("description");
+                    if (jo.has("location"))
+                        streetEvent.location = jo.getString("location");
+                    if (jo.has("latitude") && jo.has("longitude"))
+                        streetEvent.coords = new PointF((float)jo.getDouble("latitude"), (float)jo.getDouble("longitude"));
+                    streetEvent.dateTime = new Timestamp(jo.getLong("datetime"));
+                    streetEvent.positiveConfirmations = jo.getInt("positiveConfirmations");
+                    streetEvent.negativeConfirmations = jo.getInt("negativeConfirmations");
                     list.add(streetEvent);
                 }
                 return list;
@@ -73,22 +93,8 @@ public class API {
 
     private APIResponse sendRequest(URL url, String method, byte[] msg) throws GeneralSecurityException {
         try {
-            // TODO extract this code so it's only run once
-
-            String keyStoreType = KeyStore.getDefaultType();
-            KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-            keyStore.load(context.getAssets().open("keys/truststore.bks"), "123456".toCharArray());
-
-            // Create a TrustManager that trusts the CAs in our KeyStore
-            String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
-            tmf.init(keyStore);
-
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(null, tmf.getTrustManagers(), null);
-
             HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
-            urlConnection.setSSLSocketFactory(context.getSocketFactory());
+            urlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
             urlConnection.setRequestMethod(method);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -102,6 +108,20 @@ public class API {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private void initSSLContext() throws GeneralSecurityException, IOException {
+        String keyStoreType = KeyStore.getDefaultType();
+        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+        keyStore.load(context.getAssets().open("keys/truststore.bks"), "123456".toCharArray());
+
+        // Create a TrustManager that trusts the CAs in our KeyStore
+        String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+        tmf.init(keyStore);
+
+        sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, tmf.getTrustManagers(), null);
     }
 
     private boolean isHTTPResponseCodeSuccess(int code) {
