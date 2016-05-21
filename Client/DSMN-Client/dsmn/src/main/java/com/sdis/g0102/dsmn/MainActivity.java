@@ -2,11 +2,13 @@ package com.sdis.g0102.dsmn;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -17,6 +19,9 @@ import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.places.Places;
 import com.sdis.g0102.dsmn.api.API;
 
 import java.io.IOException;
@@ -32,7 +37,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
     private final static int RECENT_EVENTS_CODE = 1234;
 
@@ -46,9 +51,19 @@ public class MainActivity extends AppCompatActivity {
 
     private Button enterButton;
 
+    public static GoogleApiClient mGoogleApiClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mGoogleApiClient = new GoogleApiClient
+                .Builder(this)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .enableAutoManage(this, this)
+                .build();
+
         FacebookSdk.sdkInitialize(getApplicationContext());
         AppEventsLogger.activateApp(this);
         setContentView(R.layout.activity_main);
@@ -62,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-        }.start();
+        };//.start();
         initEnterButton();
         initAlerts();
         initLoginButtonCallbacks();
@@ -200,6 +215,12 @@ public class MainActivity extends AppCompatActivity {
         // required by Facebook
         if(accessTokenTracker != null)
             accessTokenTracker.stopTracking();
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d("MainActivity", "Connection Failed");
+        Toast.makeText(this, "Unable to start Google API connection. Some functionalities may be unavailable.", Toast.LENGTH_LONG).show();
     }
 
 }
