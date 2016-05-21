@@ -10,6 +10,7 @@ import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -61,6 +62,14 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
         good_location_layout = (LinearLayout) findViewById(R.id.good_location_layout);
         location_text = (TextView) findViewById(R.id.location_name);
         description_text = (TextView) findViewById(R.id.create_event_description);
+
+        description_text.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            }
+        });
 
         Spinner spinner = (Spinner) findViewById(R.id.choose_type_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.event_types, android.R.layout.simple_spinner_item);
@@ -155,7 +164,6 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
             return;
         }
 
-        // TODO acabar
         actualSubmit();
     }
 

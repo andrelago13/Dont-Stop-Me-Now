@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -32,6 +33,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private TextView event_description_textview;
     private ImageView event_confirm_true_image;
     private ImageView event_confirm_false_image;
+    private ImageView event_image;
 
     private LinearLayout commentsLayout;
 
@@ -45,6 +47,9 @@ public class EventDetailsActivity extends AppCompatActivity {
         Bundle b = this.getIntent().getExtras();
         event_id = b.getInt(RecentEventView.EVENT_ID);
         Log.d("EventDetailsActivity", "Accessing details for event #" + event_id + ".");
+
+        event_image = (ImageView) findViewById(R.id.event_image);
+        // TODO assign
 
         initTextViewsAppearance();
         initButtons();
@@ -65,6 +70,22 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         event_description_textview = (TextView) findViewById(R.id.event_description);
         event_description_textview.setMovementMethod(new ScrollingMovementMethod());
+
+        event_address_textview.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            }
+        });
+
+        event_description_textview.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            }
+        });
     }
 
     private void setConfirmState(ConfirmState state) {
