@@ -16,6 +16,7 @@ public class StreetEvent {
         HIGH_TRAFFIC,
         CAR_CRASH
     }
+    public int id;
     public int creator;
     public Type type;
     public String description;

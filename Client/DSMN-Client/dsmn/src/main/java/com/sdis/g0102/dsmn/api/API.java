@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.sql.Timestamp;
@@ -66,6 +67,7 @@ public class API {
                 for (int i = 0; i < ja.length(); i++) {
                     JSONObject jo = ja.getJSONObject(i);
                     StreetEvent streetEvent = new StreetEvent();
+                    streetEvent.id = jo.getInt("id");
                     streetEvent.creator = jo.getInt("creator");
                     int type = jo.getInt("type");
                     StreetEvent.Type[] seTypes = StreetEvent.Type.values();
@@ -95,17 +97,40 @@ public class API {
         return null;
     }
 
-    public Bitmap getEventImage(int eventID) {
+    public Bitmap getEventPhoto(int eventID) {
         try {
             APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "photo/"), "GET", null);
-            Bitmap bmp = BitmapFactory.decodeByteArray(response.getMessage(), 0, response.getMessage().length);
-            return bmp;
+            if (isHTTPResponseCodeSuccess(response.getCode())) {
+                Bitmap bmp = BitmapFactory.decodeByteArray(response.getMessage(), 0, response.getMessage().length);
+                return bmp;
+            } else {
+                return null;
+            }
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     *
+     * @param eventID
+     * @return true on success, false otherwise
+     */
+    public boolean setEventPhoto(int eventID, Bitmap photo) {
+        try {
+            ByteBuffer buf = ByteBuffer.allocate(photo.getByteCount());
+            photo.copyPixelsToBuffer(buf);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "PUT", buf.array());
+            return true;
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private APIResponse sendRequest(URL url, String method, byte[] msg) throws GeneralSecurityException {
