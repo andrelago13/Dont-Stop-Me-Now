@@ -22,7 +22,6 @@ public class StreetEvent {
     public String description;
     public String location;
     public PointF coords;
-    public Bitmap photo;
     public Timestamp dateTime;
     public int positiveConfirmations;
     public int negativeConfirmations;

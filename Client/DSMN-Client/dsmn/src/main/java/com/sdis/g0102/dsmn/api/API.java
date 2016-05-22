@@ -99,6 +99,18 @@ public class API {
         return null;
     }
 
+    public boolean deleteEvent(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/"), "GET", null);
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public Bitmap getEventPhoto(int eventID) {
         try {
             APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "photo/"), "GET", null);
