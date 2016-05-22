@@ -1,8 +1,11 @@
 package com.sdis.g0102.dsmn.api;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.location.Location;
+import android.media.Image;
 
 import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 
@@ -13,6 +16,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -86,6 +90,19 @@ public class API {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Bitmap getEventImage(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "photo/"), "GET", null);
+            Bitmap bmp = BitmapFactory.decodeByteArray(response.getMessage(), 0, response.getMessage().length);
+            return bmp;
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
             e.printStackTrace();
         }
         return null;

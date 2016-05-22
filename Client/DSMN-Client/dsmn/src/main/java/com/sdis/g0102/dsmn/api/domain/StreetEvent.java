@@ -1,5 +1,6 @@
 package com.sdis.g0102.dsmn.api.domain;
 
+import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.media.Image;
 
@@ -20,7 +21,7 @@ public class StreetEvent {
     public String description;
     public String location;
     public PointF coords;
-    public Image photo;
+    public Bitmap photo;
     public Timestamp dateTime;
     public int positiveConfirmations;
     public int negativeConfirmations;
