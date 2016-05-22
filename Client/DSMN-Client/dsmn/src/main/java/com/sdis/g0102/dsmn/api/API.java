@@ -133,6 +133,23 @@ public class API {
         return false;
     }
 
+    /**
+     *
+     * @param eventID
+     * @return true on success, false otherwise
+     */
+    public boolean deleteEventPhoto(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo/"), "DELETE", null);
+            return true;
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     private APIResponse sendRequest(URL url, String method, byte[] msg) throws GeneralSecurityException {
         try {
             HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
