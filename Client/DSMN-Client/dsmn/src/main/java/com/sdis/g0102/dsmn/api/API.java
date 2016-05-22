@@ -66,22 +66,7 @@ public class API {
                 List<StreetEvent> list = new LinkedList<StreetEvent>();
                 for (int i = 0; i < ja.length(); i++) {
                     JSONObject jo = ja.getJSONObject(i);
-                    StreetEvent streetEvent = new StreetEvent();
-                    streetEvent.id = jo.getInt("id");
-                    streetEvent.creator = jo.getInt("creator");
-                    int type = jo.getInt("type");
-                    StreetEvent.Type[] seTypes = StreetEvent.Type.values();
-                    if (type > seTypes.length)
-                        return null;
-                    streetEvent.type = seTypes[type];
-                    streetEvent.description = jo.getString("description");
-                    if (jo.has("location"))
-                        streetEvent.location = jo.getString("location");
-                    if (jo.has("latitude") && jo.has("longitude"))
-                        streetEvent.coords = new PointF((float)jo.getDouble("latitude"), (float)jo.getDouble("longitude"));
-                    streetEvent.dateTime = new Timestamp(jo.getLong("datetime"));
-                    streetEvent.positiveConfirmations = jo.getInt("positiveConfirmations");
-                    streetEvent.negativeConfirmations = jo.getInt("negativeConfirmations");
+                    StreetEvent streetEvent = generateEventFromJSON(jo);
                     list.add(streetEvent);
                 }
                 return list;
@@ -90,6 +75,23 @@ public class API {
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public StreetEvent getEvent(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/"), "GET", null);
+            if (isHTTPResponseCodeSuccess(response.getCode())) {
+                return generateEventFromJSON(new JSONObject(new String(response.getMessage())));
+            } else
+                return null;
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (JSONException e) {
             e.printStackTrace();
@@ -124,7 +126,7 @@ public class API {
             ByteBuffer buf = ByteBuffer.allocate(photo.getByteCount());
             photo.copyPixelsToBuffer(buf);
             APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "PUT", buf.array());
-            return true;
+            return isHTTPResponseCodeSuccess(response.getCode());
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         } catch (MalformedURLException e) {
@@ -141,13 +143,33 @@ public class API {
     public boolean deleteEventPhoto(int eventID) {
         try {
             APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo/"), "DELETE", null);
-            return true;
+            return isHTTPResponseCodeSuccess(response.getCode());
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
+        StreetEvent streetEvent = new StreetEvent();
+        streetEvent.id = jo.getInt("id");
+        streetEvent.creator = jo.getInt("creator");
+        int type = jo.getInt("type");
+        StreetEvent.Type[] seTypes = StreetEvent.Type.values();
+        if (type > seTypes.length)
+            return null;
+        streetEvent.type = seTypes[type];
+        streetEvent.description = jo.getString("description");
+        if (jo.has("location"))
+            streetEvent.location = jo.getString("location");
+        if (jo.has("latitude") && jo.has("longitude"))
+            streetEvent.coords = new PointF((float)jo.getDouble("latitude"), (float)jo.getDouble("longitude"));
+        streetEvent.dateTime = new Timestamp(jo.getLong("datetime"));
+        streetEvent.positiveConfirmations = jo.getInt("positiveConfirmations");
+        streetEvent.negativeConfirmations = jo.getInt("negativeConfirmations");
+        return streetEvent;
     }
 
     private APIResponse sendRequest(URL url, String method, byte[] msg) throws GeneralSecurityException {
