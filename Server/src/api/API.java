@@ -230,9 +230,17 @@ public class API implements HttpHandler {
 		} else {
 			ResultSet rs;
 			Statement stmt;
+			boolean onlymine = false;
+			if (query.get("onlymine") != null)
+				onlymine = Boolean.parseBoolean(query.get("onlymine"));
 			if (query.get("longitude") == null || query.get("latitude") == null) {
-				stmt = this.db.createStatement();
-				rs = stmt.executeQuery("SELECT *, ST_X(coords::geometry) AS longitude, ST_Y(coords::geometry) AS latitude FROM Events ORDER BY datetime DESC");
+				stmt = this.db.prepareStatement("SELECT *, ST_X(coords::geometry) AS longitude, ST_Y(coords::geometry) AS latitude FROM Events"
+						+ (onlymine ? " WHERE creator = ?" : "")
+						+ " ORDER BY datetime DESC"
+						);
+				PreparedStatement ps = (PreparedStatement) stmt;
+				ps.setInt(1, 1); // TODO
+				rs = ps.executeQuery();
 			} else {
 				Float radius = null;
 				if (query.get("radius") != null) 
@@ -240,21 +248,33 @@ public class API implements HttpHandler {
 					try { radius = Float.parseFloat(query.get("radius")); }
 					catch (NumberFormatException e) {};
 				}
-				stmt = this.db.prepareStatement("SELECT *,"
+				String sqlQuery = "SELECT *,"
 						+ " ST_X(coords::geometry) AS longitude, ST_Y(coords::geometry) AS latitude, ST_DISTANCE(coords, Geography(Point(?, ?)::geometry)) AS distance"
-						+ " FROM Events"
-						+ ((radius == null) ? "" : " WHERE ST_DWithin(coords, Geography(Point(?, ?)::geometry), ?)")
-						+ " ORDER BY datetime DESC");
+						+ " FROM Events";
+				if (radius == null) {
+					if (onlymine)
+						sqlQuery += " WHERE creator = ?";
+				} else {
+					sqlQuery += " WHERE ST_DWithin(coords, Geography(Point(?, ?)::geometry), ?)";
+					if (onlymine)
+						sqlQuery += " AND creator = ?";
+				}
+				sqlQuery += " ORDER BY datetime DESC";
+				
+				stmt = this.db.prepareStatement(sqlQuery);
 				PreparedStatement ps = (PreparedStatement)stmt;
 				float longitude = Float.parseFloat(query.get("longitude"));
 				float latitude = Float.parseFloat(query.get("latitude"));
-				ps.setFloat(1, longitude);
-				ps.setFloat(2, latitude);
+				int index = 1;
+				ps.setFloat(index++, longitude);
+				ps.setFloat(index++, latitude);
 				if (radius != null) {
-					ps.setFloat(3, longitude);
-					ps.setFloat(4, latitude);
-					ps.setFloat(5, radius);
+					ps.setFloat(index++, longitude);
+					ps.setFloat(index++, latitude);
+					ps.setFloat(index++, radius);
 				}
+				if (onlymine)
+					ps.setFloat(index++, 1); // TODO
 				rs = ps.executeQuery();
 			}
 			JSONArray ja = new JSONArray();
