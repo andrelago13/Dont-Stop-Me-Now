@@ -38,10 +38,12 @@ public class API {
     private Context context;
     private URL url;
     private SSLContext sslContext;
-    public API(Context context, URL url) throws GeneralSecurityException, IOException {
+    private String facebookHash;
+
+    public API(Context context, URL url, String facebookHash) throws GeneralSecurityException, IOException {
         this.context = context;
         this.url = url;
-
+        this.facebookHash = facebookHash;
         initSSLContext();
     }
 
@@ -235,6 +237,7 @@ public class API {
             HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
             urlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
             urlConnection.setRequestMethod(method);
+            urlConnection.setRequestProperty("Authorization", this.facebookHash);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             InputStream is = urlConnection.getInputStream();
