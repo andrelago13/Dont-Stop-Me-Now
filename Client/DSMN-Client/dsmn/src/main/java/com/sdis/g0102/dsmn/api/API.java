@@ -249,6 +249,7 @@ public class API {
             joCreateComment.put("eventid", eventID);
             joCreateComment.put("message", message);
             APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/comments"), "POST", jo.toString().getBytes());
+            return isHTTPResponseCodeSuccess(response.getCode());
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         } catch (MalformedURLException e) {
@@ -256,6 +257,7 @@ public class API {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
