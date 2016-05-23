@@ -239,7 +239,8 @@ public class API implements HttpHandler {
 						+ " ORDER BY datetime DESC"
 						);
 				PreparedStatement ps = (PreparedStatement) stmt;
-				ps.setInt(1, 1); // TODO
+				if (onlymine)
+					ps.setInt(1, 1); // TODO
 				rs = ps.executeQuery();
 			} else {
 				Float radius = null;
