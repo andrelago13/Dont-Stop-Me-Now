@@ -60,7 +60,7 @@ public class API {
 
     public List<StreetEvent> listEvents() {
         try {
-            APIResponse response = sendRequest(new URL(this.url + "events/"), "GET", null);
+            APIResponse response = sendRequest(new URL(this.url + "events"), "GET", null);
             if (isHTTPResponseCodeSuccess(response.getCode())) {
                 JSONArray ja = new JSONArray(new String(response.getMessage()));
                 List<StreetEvent> list = new LinkedList<StreetEvent>();
@@ -83,8 +83,22 @@ public class API {
     }
 
     public StreetEvent getEvent(int eventID) {
+        return getEvent(eventID, null, null);
+    }
+
+    public StreetEvent getEvent(int eventID, Float longitude, Float latitude) {
+        return getEvent(eventID, longitude, latitude, null);
+    }
+
+    public StreetEvent getEvent(int eventID, Float longitude, Float latitude, Float radius) {
         try {
-            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/"), "GET", null);
+            String s = this.url + "events/" + eventID;
+            if (longitude != null && latitude != null) {
+                s += "?longitude=" + longitude + "&latitude=" + latitude;
+                if (radius != null)
+                    s += "radius=" + radius;
+            }
+            APIResponse response = sendRequest(new URL(s), "GET", null);
             if (isHTTPResponseCodeSuccess(response.getCode())) {
                 return generateEventFromJSON(new JSONObject(new String(response.getMessage())));
             } else
@@ -101,7 +115,7 @@ public class API {
 
     public boolean deleteEvent(int eventID) {
         try {
-            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/"), "GET", null);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID), "GET", null);
             return isHTTPResponseCodeSuccess(response.getCode());
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
@@ -113,7 +127,7 @@ public class API {
 
     public Bitmap getEventPhoto(int eventID) {
         try {
-            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "photo/"), "GET", null);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "GET", null);
             if (isHTTPResponseCodeSuccess(response.getCode())) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(response.getMessage(), 0, response.getMessage().length);
                 return bmp;
@@ -154,7 +168,7 @@ public class API {
      */
     public boolean deleteEventPhoto(int eventID) {
         try {
-            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo/"), "DELETE", null);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "DELETE", null);
             return isHTTPResponseCodeSuccess(response.getCode());
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
