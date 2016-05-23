@@ -7,6 +7,7 @@ import android.graphics.PointF;
 import android.location.Location;
 import android.media.Image;
 
+import com.sdis.g0102.dsmn.api.domain.Comment;
 import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 
 import org.json.JSONArray;
@@ -210,6 +211,34 @@ public class API {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Comment> listEventComments(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/comments"), "GET", null);
+            if (!isHTTPResponseCodeSuccess(response.getCode()))
+                return null;
+            JSONArray ja = new JSONArray(new String(response.getMessage()));
+            List<Comment> comments = new LinkedList<Comment>();
+            for (int i = 0; i < ja.length(); i++) {
+                JSONObject jo = ja.getJSONObject(i);
+                Comment comment = new Comment();
+                comment.id = jo.getInt("id");
+                comment.writer = jo.getInt("writer");
+                comment.event = jo.getInt("event");
+                comment.message = jo.getString("message");
+                comment.datetime = jo.getLong("datetime");
+                comments.add(comment);
+            }
+            return comments;
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
