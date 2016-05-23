@@ -58,9 +58,9 @@ public class API {
         });
     }
 
-    public List<StreetEvent> listEvents() {
+    public List<StreetEvent> listEvents(boolean onlyMine) {
         try {
-            APIResponse response = sendRequest(new URL(this.url + "events"), "GET", null);
+            APIResponse response = sendRequest(new URL(this.url + "events?onlymine=" + onlyMine), "GET", null);
             if (isHTTPResponseCodeSuccess(response.getCode())) {
                 JSONArray ja = new JSONArray(new String(response.getMessage()));
                 List<StreetEvent> list = new LinkedList<StreetEvent>();
