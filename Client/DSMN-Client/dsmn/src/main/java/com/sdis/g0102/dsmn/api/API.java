@@ -241,6 +241,23 @@ public class API {
         return null;
     }
 
+    public boolean addComment(int eventID, String message) {
+        try {
+            JSONObject jo = new JSONObject();
+            JSONObject joCreateComment = new JSONObject();
+            jo.put("create_comment", joCreateComment);
+            joCreateComment.put("eventid", eventID);
+            joCreateComment.put("message", message);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/comments"), "POST", jo.toString().getBytes());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
         StreetEvent streetEvent = new StreetEvent();
         streetEvent.id = jo.getInt("id");
