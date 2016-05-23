@@ -82,6 +82,38 @@ public class API {
         return null;
     }
 
+    public boolean createEvent(StreetEvent.Type type, String duration, String location) {
+        return createEvent(type, duration, location, null, null);
+    }
+
+    public boolean createEvent(StreetEvent.Type type, String duration, Float longitude, Float latitude) {
+        return createEvent(type, duration, null, longitude, latitude);
+    }
+
+    public boolean createEvent(StreetEvent.Type type, String description, String location, Float longitude, Float latitude) {
+        try {
+            JSONObject jo = new JSONObject();
+            JSONObject joCreateEvent = new JSONObject();
+            joCreateEvent.put("type", type);
+            joCreateEvent.put("description", description);
+            if (location != null)
+                joCreateEvent.put("location", location);
+            if (longitude != null)
+                joCreateEvent.put("longitude", longitude);
+            if (latitude != null)
+                joCreateEvent.put("latitude", latitude);
+            jo.put("create_event", joCreateEvent);
+            APIResponse response = sendRequest(new URL(this.url + "events/"), "POST", jo.toString().getBytes());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public StreetEvent getEvent(int eventID) {
         return getEvent(eventID, null, null);
     }
