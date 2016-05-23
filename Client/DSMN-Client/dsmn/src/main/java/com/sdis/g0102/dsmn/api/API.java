@@ -94,7 +94,7 @@ public class API {
         try {
             JSONObject jo = new JSONObject();
             JSONObject joCreateEvent = new JSONObject();
-            joCreateEvent.put("type", type);
+            joCreateEvent.put("type", type.ordinal());
             joCreateEvent.put("description", description);
             if (location != null)
                 joCreateEvent.put("location", location);
