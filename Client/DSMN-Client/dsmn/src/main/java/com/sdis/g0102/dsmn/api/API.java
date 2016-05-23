@@ -260,6 +260,37 @@ public class API {
         return false;
     }
 
+    public boolean addConfirmation(int eventID, boolean type) {
+        try {
+            JSONObject jo = new JSONObject();
+            JSONObject joCreateComment = new JSONObject();
+            jo.put("event_confirm", joCreateComment);
+            joCreateComment.put("eventid", eventID);
+            joCreateComment.put("type", type);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/confirmations"), "PUT", jo.toString().getBytes());
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean deleteConfirmation(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/confirmations"), "DELETE", null);
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
         StreetEvent streetEvent = new StreetEvent();
         streetEvent.id = jo.getInt("id");
