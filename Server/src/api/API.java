@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.sql.Blob;
 import java.sql.Connection;
@@ -32,6 +33,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import jdk.nashorn.internal.scripts.JO;
+import server.FacebookServer;
 
 public class API implements HttpHandler {
 	Connection db;
@@ -87,11 +89,32 @@ public class API implements HttpHandler {
 		}
 		}
 	}
-
-	private boolean checkAuth(HttpExchange t) {
+	
+	private boolean checkAuth(HttpExchange t) throws SQLException {
 		String token = t.getRequestHeaders().getFirst("Authorization");
 		System.out.println("Token: " + token);
+		
+		String uid = FacebookServer.tokenValidation(token);
+		if(uid == null)
+			return false;
+		
+		verifyUserAccount(uid);
+		//updateUserLocation(uid, t.getRemoteAddress().getAddress().toString(), t.getRemoteAddress().getPort()); /TODO notificatiosEndpoint
+		
 		return true;
+	}
+	
+	private void verifyUserAccount(String uid) throws SQLException {
+		Statement stmt = this.db.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT * FROM users WHERE facebookID = " + uid);
+		if(!rs.next()){
+			stmt.executeUpdate("INSERT INTO users(facebookID) VALUES ('" + uid + "')");
+		}
+	}
+	
+	private void updateUserLocation(String uid, String address, int port) throws SQLException {
+		Statement stmt = this.db.createStatement();
+		stmt.executeUpdate("UPDATE users SET address = " + address + ", port = " + port + " WHERE facebookID = " + uid);
 	}
 
 	private void eventsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body)
