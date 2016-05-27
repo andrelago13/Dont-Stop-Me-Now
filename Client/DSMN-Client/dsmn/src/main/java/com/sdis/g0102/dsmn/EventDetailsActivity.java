@@ -1,13 +1,16 @@
 package com.sdis.g0102.dsmn;
 
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -28,6 +31,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private int event_id;
+    private boolean my_event;
 
     private TextView event_address_textview;
     private TextView event_description_textview;
@@ -46,14 +50,46 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         Bundle b = this.getIntent().getExtras();
         event_id = b.getInt(RecentEventView.EVENT_ID);
+        my_event = b.getBoolean(RecentEventView.EVENT_IS_MINE);
         Log.d("EventDetailsActivity", "Accessing details for event #" + event_id + ".");
 
         event_image = (ImageView) findViewById(R.id.event_image);
-        // TODO assign
 
         initTextViewsAppearance();
         initButtons();
         initCommentsLayout();
+        initDeleteButton();
+    }
+
+    private void initDeleteButton() {
+        Button delete_button = (Button) findViewById(R.id.btnDeleteEvent);
+        if(!my_event) {
+            delete_button.setVisibility(View.GONE);
+        }
+    }
+
+    public void deleteEvent(View v) {
+        if(!my_event)
+            return;
+
+        new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Deleting Event")
+                .setMessage("Are you sure you want to delete this event?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        actuallyDeleteEvent();
+                    }
+
+                })
+                .setNegativeButton("No", null)
+                .show();
+    }
+
+    private void actuallyDeleteEvent() {
+        // TODO actually delete
     }
 
     private void initCommentsLayout() {
