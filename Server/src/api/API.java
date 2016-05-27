@@ -81,9 +81,12 @@ public class API implements HttpHandler {
 		case "events":
 			eventsEndpoint(t, method, paths, query, body);
 			break;
+		case "notifications":
+			notificationsEndpoint(t, method, paths, query, body);
+			break;
 		default: {
-			String response = "{a:\"aaaa\", b}";
-			respond(t, response, 200);
+			String response = "Page not found.";
+			respond(t, response, 404);
 		}
 		}
 	}
@@ -92,6 +95,38 @@ public class API implements HttpHandler {
 		String token = t.getRequestHeaders().getFirst("Authorization");
 		System.out.println("Token: " + token);
 		return true;
+	}
+
+	private void notificationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body) throws IOException, SQLException {
+		switch (method) {
+		case "PUT": {
+			JSONObject jo = new JSONObject(body).getJSONObject("request_notification");
+			PreparedStatement stmt = this.db.prepareStatement(
+					"UPDATE Users SET address = ?, port = ?, coords = Geography(Point(?, ?)::geometry), radius = ? WHERE facebookID = ?");
+			stmt.setString(1, jo.getString("address"));
+			stmt.setInt(2, jo.getInt("port"));
+			stmt.setFloat(3, (float)jo.getDouble("longitude"));
+			stmt.setFloat(4, (float)jo.getDouble("latitude"));
+			stmt.setFloat(5, (float)jo.getDouble("radius"));
+			stmt.setFloat(6, 1); // TODO
+			
+			if (stmt.executeUpdate() == 0)
+				respond(t, formatError(method, query, "Invalid request parameters."), 400);
+			else
+				respond(t, formatSuccess(method, query), 200);
+			break;
+		}
+		case "DELETE":
+		{
+			PreparedStatement stmt = this.db.prepareStatement(
+					"UPDATE Users SET address = NULL, port = NULL, coords = NULL, radius = NULL WHERE facebookID = ?");
+			stmt.setInt(1, 1); // TODO
+			break;
+		}
+		default:
+			respond(t, formatError(method, query, "Invalid method."), 404);
+		}
+		return;
 	}
 
 	private void eventsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body)
@@ -261,7 +296,7 @@ public class API implements HttpHandler {
 						sqlQuery += " AND creator = ?";
 				}
 				sqlQuery += " ORDER BY datetime DESC";
-				
+
 				stmt = this.db.prepareStatement(sqlQuery);
 				PreparedStatement ps = (PreparedStatement)stmt;
 				float longitude = Float.parseFloat(query.get("longitude"));
