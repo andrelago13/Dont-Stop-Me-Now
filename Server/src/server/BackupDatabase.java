@@ -23,8 +23,8 @@ public class BackupDatabase {
 		cmds.add("-b");    
 		cmds.add("-v");    
 		cmds.add("-f"); 
-		cmds.add(outputFile);   // nome do file output após backup
-		cmds.add("postgres"); //path da db a ser feito o backup
+		cmds.add(outputFile);   // local do file output após backup
+		cmds.add("postgres"); 
 
 		ProcessBuilder pb = new ProcessBuilder(cmds);
 		pb.environment().put("PGPASSWORD", password); //password do postgres
@@ -47,12 +47,10 @@ public class BackupDatabase {
 	}
 	public static void main(String[] args) {  
 		try {
-			databaseBackup("C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\pg_dump.exe","C:\\Users\\Leonardo\\Desktop\\test\\dbm.sql", "social21");
+			databaseBackup("C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\pg_dump.exe","./backup.sql", "123456");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}  
 	} 
