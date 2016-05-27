@@ -87,6 +87,7 @@ public class API implements HttpHandler {
 		default: {
 			String response = "Page not found.";
 			respond(t, response, 404);
+			return;
 		}
 		}
 	}
