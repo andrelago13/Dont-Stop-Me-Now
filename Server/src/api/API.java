@@ -239,6 +239,7 @@ public class API implements HttpHandler {
 		jo.put("id", rs.getInt("id"));
 		jo.put("type", rs.getInt("type"));
 		jo.put("description", rs.getString("description"));
+		jo.put("creator", rs.getString("creator"));
 		try {
 			rs.getString("distance");
 			jo.put("distance", rs.getFloat("distance"));
@@ -255,7 +256,9 @@ public class API implements HttpHandler {
 			jo.put("latitude", latitude);
 		}
 
-		jo.put("datetime", rs.getTimestamp("datetime"));
+		jo.put("datetime", rs.getTimestamp("datetime").getTime());
+		jo.put("positiveConfirmations", rs.getInt("positiveconfirmations"));
+		jo.put("negativeConfirmations", rs.getInt("negativeconfirmations"));
 		return jo;
 	}
 

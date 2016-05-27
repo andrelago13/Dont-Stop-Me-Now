@@ -4,6 +4,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.LinearLayout;
 
+import com.sdis.g0102.dsmn.api.domain.StreetEvent;
+
 public class MyEventsActivity extends AppCompatActivity {
 
     @Override
@@ -14,7 +16,7 @@ public class MyEventsActivity extends AppCompatActivity {
         LinearLayout ll = (LinearLayout) findViewById(R.id.main_layout);
 
         for(int i = 0; i < 20; ++i) {
-            RecentEventView b = new RecentEventView(this, null, i, "desc", "addr", Event.Type.CRASH, true);
+            RecentEventView b = new RecentEventView(this, null, i, "desc", "addr", StreetEvent.Type.CAR_CRASH, true);
 
             ll.addView(b);
         }

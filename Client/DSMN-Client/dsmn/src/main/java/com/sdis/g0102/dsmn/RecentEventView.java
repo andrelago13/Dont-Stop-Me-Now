@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
+import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 
 import java.util.Random;
 
@@ -47,11 +48,15 @@ public class RecentEventView extends LinearLayout {
         address = (TextView) findViewById(R.id.event_address);
     }
 
-    public RecentEventView(Context context, AttributeSet attrs, int event_id, String description, String address, Event.Type type) {
+    public RecentEventView(Context context, AttributeSet attrs, StreetEvent event) {
+        this(context, attrs, event.id, event.description, event.location, event.type, event.creator.equals(AccessToken.getCurrentAccessToken().getUserId()));
+    }
+
+    public RecentEventView(Context context, AttributeSet attrs, int event_id, String description, String address, StreetEvent.Type type) {
         this(context, attrs, event_id, description, address, type, false);
     }
 
-    public RecentEventView(Context context, AttributeSet attrs, int event_id, String description, String address, Event.Type type, boolean my_event) {
+    public RecentEventView(Context context, AttributeSet attrs, int event_id, String description, String address, StreetEvent.Type type, boolean my_event) {
         this(context, attrs);
 
         this.my_event = my_event;
@@ -67,16 +72,16 @@ public class RecentEventView extends LinearLayout {
 
         if(type != null) {
             switch(type) {
-                case RADAR:
+                case SPEED_RADAR:
                     this.icon.setImageResource(R.drawable.event_camera);
                     break;
-                case STOP:
+                case TRAFFIC_STOP:
                     this.icon.setImageResource(R.drawable.event_stop);
                     break;
-                case TRAFFIC:
+                case HIGH_TRAFFIC:
                     this.icon.setImageResource(R.drawable.event_traffic);
                     break;
-                case CRASH:
+                case CAR_CRASH:
                     this.icon.setImageResource(R.drawable.event_crash);
                     break;
             }

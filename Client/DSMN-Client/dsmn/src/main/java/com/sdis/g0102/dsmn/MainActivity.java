@@ -73,20 +73,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         AppEventsLogger.activateApp(this);
         setContentView(R.layout.activity_main);
         callbackManager = CallbackManager.Factory.create();
-        /*new Thread() {
-            @Override
-            public void run() {
-                try {
-                    new API(getApplicationContext(), new URL("https://172.30.4.33/api/")).listEvents();
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (GeneralSecurityException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();*/
+
         initEnterButton();
         initAlerts();
         initLoginButtonCallbacks();

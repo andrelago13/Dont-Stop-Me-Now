@@ -1,8 +1,11 @@
 package com.sdis.g0102.dsmn;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -10,6 +13,7 @@ import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,12 +23,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
+import com.sdis.g0102.dsmn.api.API;
+import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,24 +46,54 @@ public class RecentEventsActivity extends AppCompatActivity {
 
     private AlertDialog confirmLogout;
 
+    private RelativeLayout loading;
+    private LinearLayout ll;
+
+    private API api = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recent_events);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        loading = (RelativeLayout) findViewById(R.id.loadingPanel);
         setSupportActionBar(toolbar);
+
+        final Activity this_t = this;
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Looper.prepare();
+                    Log.d("RecentEventsActivity", "Connecting.");
+                    api = API.getInstance(this_t.getBaseContext());
+                    Log.d("RecentEventsActivity", "Connected.");
+                    List<StreetEvent> events = api.listEvents(false);
+                    eventsLoaded(events);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.d("RecentEventsActivity", "Unable to connect to DSMN server. (Exception 1)");
+                    Toast.makeText(this_t.getBaseContext(),"Unable to connect to DSMN server. (Exception 1)", Toast.LENGTH_SHORT).show();
+                    this_t.finish();
+                } catch (GeneralSecurityException e) {
+                    e.printStackTrace();
+                    Log.d("RecentEventsActivity", "Unable to connect to DSMN server. (Exception 2)");
+                    Toast.makeText(this_t.getBaseContext(),"Unable to connect to DSMN server. (Exception 2)", Toast.LENGTH_SHORT).show();
+                    this_t.finish();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d("RecentEventsActivity", "Unable to connect to DSMN server. (Exception 3)");
+                    Toast.makeText(this_t.getBaseContext(),"Unable to connect to DSMN server. (Exception 3)", Toast.LENGTH_SHORT).show();
+                    this_t.finish();
+                }
+            }
+        }).start();
 
         initCollapsingToolbarLayout();
         initFloatingActionButton();
         initDialogs();
 
-        LinearLayout ll = (LinearLayout) findViewById(R.id.recent_events_linearlayout);
-
-        for(int i = 0; i < 20; ++i) {
-            RecentEventView b = new RecentEventView(this, null, i, "desc", "addr", Event.Type.CRASH);
-
-            ll.addView(b);
-        }
+        ll = (LinearLayout) findViewById(R.id.recent_events_linearlayout);
     }
 
     private void initDialogs() {
@@ -141,4 +181,20 @@ public class RecentEventsActivity extends AppCompatActivity {
         startActivityForResult(intent, MY_EVENTS_CODE);
     }
 
+    private void eventsLoaded(List<StreetEvent> events) {
+        final RelativeLayout loading_final = loading;
+        final Context ctx = this;
+        final List<StreetEvent> list_events = events;
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                loading_final.setVisibility(View.GONE);
+                for(StreetEvent event : list_events) {
+                    RecentEventView b = new RecentEventView(ctx, null, event);
+                    ll.addView(b);
+                }
+            }
+        });
+    }
 }

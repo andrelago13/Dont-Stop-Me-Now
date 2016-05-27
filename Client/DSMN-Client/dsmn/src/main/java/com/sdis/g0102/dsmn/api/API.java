@@ -6,7 +6,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.location.Location;
 import android.media.Image;
+import android.util.Log;
 
+import com.facebook.AccessToken;
 import com.sdis.g0102.dsmn.api.domain.Comment;
 import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 
@@ -37,14 +39,31 @@ import javax.net.ssl.TrustManagerFactory;
  * Created by Gustavo on 19/05/2016.
  */
 public class API {
+
+    public static final String url_string = "https://172.30.23.148/api/";
+
+    private static API instance = null;
+
     private Context context;
     private URL url;
     private SSLContext sslContext;
     private String facebookHash;
 
-    public API(Context context, URL url, String facebookHash) throws GeneralSecurityException, IOException {
+    public static API getInstance() {
+        return instance;
+    }
+
+    public static API getInstance(Context context) throws IOException, GeneralSecurityException {
+        if(instance != null)
+            return instance;
+
+        instance = new API(context, AccessToken.getCurrentAccessToken().getToken());
+        return instance;
+    }
+
+    private API(Context context, String facebookHash) throws GeneralSecurityException, IOException {
         this.context = context;
-        this.url = url;
+        this.url = new URL(url_string);
         this.facebookHash = facebookHash;
         initSSLContext();
     }
@@ -329,7 +348,7 @@ public class API {
     private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
         StreetEvent streetEvent = new StreetEvent();
         streetEvent.id = jo.getInt("id");
-        streetEvent.creator = jo.getInt("creator");
+        streetEvent.creator = jo.getString("creator");
         int type = jo.getInt("type");
         StreetEvent.Type[] seTypes = StreetEvent.Type.values();
         if (type > seTypes.length)

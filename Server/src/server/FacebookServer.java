@@ -42,6 +42,7 @@ public class FacebookServer {
 			return u.getId();
 		} catch (FacebookException e) {
 			System.err.println("FATAL ERROR: Invalid TOKEN.");
+			e.printStackTrace();
 		}
 		
 		return null;
