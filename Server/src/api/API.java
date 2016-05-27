@@ -85,8 +85,7 @@ public class API implements HttpHandler {
 			notificationsEndpoint(t, method, paths, query, body);
 			break;
 		default: {
-			String response = "Page not found.";
-			respond(t, response, 404);
+			respond(t, formatError(method, query, "Page not found."), 404);
 			return;
 		}
 		}
