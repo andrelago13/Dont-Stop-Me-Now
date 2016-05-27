@@ -28,20 +28,31 @@ public class BackupDatabase {
 
 		ProcessBuilder pb = new ProcessBuilder(cmds);
 		pb.environment().put("PGPASSWORD", password); //password do postgres
+		
+		long startTime = System.currentTimeMillis();
+		try { 
+			Process process = pb.start();
+			// Para analisar os possiveis erros que possam aparecer
+			final BufferedReader buf = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+			String line = buf.readLine();    
 
-		Process process = pb.start();
-		// Para analisar os possiveis erros que possam aparecer
-		final BufferedReader buf = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-		String line = buf.readLine();    
+			while (line != null) {    
+				System.out.println(line);    
+				line = buf.readLine(); 
+			}    
+			buf.close();
+			process.waitFor();
+			process.destroy();    
+		} catch (IOException e) {      
+			e.printStackTrace();      
+		} catch (InterruptedException ie) {      
+			ie.printStackTrace();      
+		}        
 
-		while (line != null) {    
-			System.out.println(line);    
-			line = buf.readLine(); 
-		}    
-		buf.close();
-		process.waitFor();
-		process.destroy();
+		long stopTime = System.currentTimeMillis();
+		long elapsedTime = stopTime - startTime;
 
+		System.out.println("Time elapsed -> " + elapsedTime + "ms" );
 		System.out.println("Backup bem sucedido.");
 
 	}
