@@ -170,7 +170,7 @@ public class API {
 
     public boolean deleteEvent(int eventID) {
         try {
-            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID), "GET", null);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID), "DELETE", null);
             return isHTTPResponseCodeSuccess(response.getCode());
         } catch (GeneralSecurityException e) {
             e.printStackTrace();

@@ -200,7 +200,17 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void actuallyDeleteEvent() {
-        // TODO actually delete
+        final Activity this_t = this;
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                if(api.deleteEvent(event_id)) {
+                    this_t.finish();
+                } else {
+                    Toast.makeText(this_t, "Unable to delete event.", Toast.LENGTH_LONG);
+                }
+            }
+        }).start();
     }
 
     private void initCommentsLayout(List<Comment> comments) {

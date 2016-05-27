@@ -148,7 +148,6 @@ public class RecentEventsActivity extends AppCompatActivity {
         ll.removeAllViews();
         loading.setVisibility(View.VISIBLE);
         fetchEvents();
-        // TODO acabar
     }
 
     @Override
@@ -184,6 +183,13 @@ public class RecentEventsActivity extends AppCompatActivity {
     private void enterMyEvents() {
         Intent intent = new Intent(this, MyEventsActivity.class);
         startActivityForResult(intent, MY_EVENTS_CODE);
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        refreshList();
+
     }
 
     private void eventsLoaded(List<StreetEvent> events) {
