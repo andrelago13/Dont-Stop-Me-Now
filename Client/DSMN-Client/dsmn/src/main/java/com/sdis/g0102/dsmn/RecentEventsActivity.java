@@ -59,15 +59,23 @@ public class RecentEventsActivity extends AppCompatActivity {
         loading = (RelativeLayout) findViewById(R.id.loadingPanel);
         setSupportActionBar(toolbar);
 
+        fetchEvents();
+
+        initCollapsingToolbarLayout();
+        initFloatingActionButton();
+        initDialogs();
+
+        ll = (LinearLayout) findViewById(R.id.recent_events_linearlayout);
+    }
+
+    private void fetchEvents() {
         final Activity this_t = this;
         new Thread( new Runnable() {
             @Override
             public void run() {
                 try {
                     Looper.prepare();
-                    Log.d("RecentEventsActivity", "Connecting.");
                     api = API.getInstance(this_t.getBaseContext());
-                    Log.d("RecentEventsActivity", "Connected.");
                     List<StreetEvent> events = api.listEvents(false);
                     eventsLoaded(events);
                 } catch (IOException e) {
@@ -88,12 +96,6 @@ public class RecentEventsActivity extends AppCompatActivity {
                 }
             }
         }).start();
-
-        initCollapsingToolbarLayout();
-        initFloatingActionButton();
-        initDialogs();
-
-        ll = (LinearLayout) findViewById(R.id.recent_events_linearlayout);
     }
 
     private void initDialogs() {
@@ -143,6 +145,9 @@ public class RecentEventsActivity extends AppCompatActivity {
     }
 
     public void refreshList() {
+        ll.removeAllViews();
+        loading.setVisibility(View.VISIBLE);
+        fetchEvents();
         // TODO acabar
     }
 
