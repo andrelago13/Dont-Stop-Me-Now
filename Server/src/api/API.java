@@ -26,6 +26,7 @@ import javax.sql.rowset.serial.SerialBlob;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.postgresql.util.PSQLException;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -105,7 +106,7 @@ public class API implements HttpHandler {
 	private void notificationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, String facebookID) throws IOException, SQLException {
 		switch (method) {
 		case "PUT": {
-			JSONObject jo = new JSONObject(body).getJSONObject("request_notification");
+			JSONObject jo = new JSONObject(new String(body)).getJSONObject("request_notification");
 			PreparedStatement stmt = this.db.prepareStatement(
 					"UPDATE Users SET address = ?, port = ?, coords = Geography(Point(?, ?)::geometry), radius = ? WHERE facebookID = ?");
 			stmt.setString(1, jo.getString("address"));
@@ -198,7 +199,7 @@ public class API implements HttpHandler {
 	private void eventCreate(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, String facebookID)
 			throws IOException, SQLException {
 		try {
-			JSONObject jo = new JSONObject(body).getJSONObject("create_event");
+			JSONObject jo = new JSONObject(new String(body)).getJSONObject("create_event");
 			PreparedStatement stmt = this.db.prepareStatement(
 					"INSERT INTO Events (creator, type, description, location, coords) VALUES (?, ?, ?, ?, Geography(Point(?, ?)::geometry))");
 			stmt.setString(1, facebookID);
@@ -431,28 +432,39 @@ public class API implements HttpHandler {
 		switch (method) {
 		case "PUT": {
 			try {
-				JSONObject jo = new JSONObject(body).getJSONObject("event_confirm");
+				JSONObject jo = new JSONObject(new String(body)).getJSONObject("event_confirm");
 				PreparedStatement stmt = this.db.prepareStatement(
-						"INSERT INTO Confirmations (creator, type, event) VALUES (?, ?, ?) ON CONFLICT DO UPDATE SET type = ? WHERE creator = ? AND event = ?");
+						"INSERT INTO Confirmations (creator, type, event) VALUES (?, ?, ?)");
 				stmt.setString(1, facebookID);
 				stmt.setBoolean(2, jo.getBoolean("type"));
 				stmt.setInt(3, jo.getInt("eventid"));
-				stmt.setBoolean(3, jo.getBoolean("type"));
-				stmt.setString(4, facebookID);
-				stmt.setInt(5, jo.getInt("eventid"));
 
-				if (stmt.executeUpdate() == 0)
-					respond(t, formatError(method, query, "Invalid request parameters."), 400);
-				else
-					respond(t, formatSuccess(method, query), 200);
+				try {
+					if (stmt.executeUpdate() == 0)
+						respond(t, formatError(method, query, "Invalid request parameters."), 400);
+					else
+						respond(t, formatSuccess(method, query), 200);
+				} catch (PSQLException e) {
+					stmt = this.db.prepareStatement(
+							"UPDATE Confirmations SET type = ? WHERE creator = ? AND event = ?");
+					stmt.setBoolean(1, jo.getBoolean("type"));
+					stmt.setString(2, facebookID);
+					stmt.setInt(3, jo.getInt("eventid"));
+					
+					if (stmt.executeUpdate() == 0)
+						respond(t, formatError(method, query, "Invalid request parameters."), 400);
+					else
+						respond(t, formatSuccess(method, query), 200);
+				}
 			} catch (JSONException e) {
+				e.printStackTrace();
 				respond(t, formatError(method, query, "Invalid request body."), 400);
 			}
 			break;
 		}
 		case "DELETE": {
 			try {
-				JSONObject jo = new JSONObject(body).getJSONObject("event_confirm");
+				JSONObject jo = new JSONObject(new String(body)).getJSONObject("event_confirm");
 				PreparedStatement stmt = this.db.prepareStatement("DELETE FROM Confirmations WHERE event = ? AND creator = ?");
 				stmt.setInt(1, jo.getInt("eventid"));
 				stmt.setString(2, facebookID);
