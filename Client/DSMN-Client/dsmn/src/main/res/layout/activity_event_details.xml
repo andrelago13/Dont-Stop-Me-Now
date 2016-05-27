@@ -9,12 +9,25 @@
     tools:context="com.sdis.g0102.dsmn.EventDetailsActivity"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:id="@+id/scrollView" >
+    android:id="@+id/scrollView"
+    android:nestedScrollingEnabled="true">
 
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete Event"
+        android:id="@+id/btnDeleteEvent"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/delete_event_button"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:layout_marginBottom="15dp"
+        android:onClick="deleteEvent" />
 
     <LinearLayout
         android:orientation="horizontal"
@@ -65,6 +78,12 @@
         android:textIsSelectable="false"
         android:paddingBottom="20dp"
         android:nestedScrollingEnabled="true" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/event_image"
+        android:layout_gravity="center_horizontal" />
 
     <LinearLayout
         android:orientation="horizontal"
@@ -139,9 +158,10 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="There are no more events to show..."
+            android:text="There are no more comments to show..."
             android:gravity="center_vertical|center_horizontal" />
     </LinearLayout>
+
 </LinearLayout>
 
 </ScrollView>

@@ -3,22 +3,28 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 -- 0 -> Mobile speed radar --
 -- 1 -> Traffic stop --
 -- 2 -> High traffic area --
+-- 3 -> Car crash --
 DROP DOMAIN IF EXISTS EVENTTYPE CASCADE;
 CREATE DOMAIN EVENTTYPE AS INTEGER
-	CHECK (VALUE IN (0, 1, 2));
+	CHECK (VALUE IN (0, 1, 2, 3));
 
 DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users
 (
-	id SERIAL PRIMARY KEY,
-	facebookID text UNIQUE NOT NULL
+	facebookID TEXT PRIMARY KEY,
+	address TEXT,
+	port INTEGER,
+	coords GEOGRAPHY(POINT,4326),
+	radius NUMERIC(7, 3),
+	CONSTRAINT positive_radius CHECK (radius IS NULL OR radius > 0),
+	CONSTRAINT notify_fully_set_or_empty CHECK ((address IS NULL AND port IS NULL AND coords IS NULL AND radius IS NULL) OR (address IS NOT NULL AND port IS NOT NULL AND coords IS NOT NULL AND radius IS NOT NULL))
 );
 
 DROP TABLE IF EXISTS events CASCADE;
 CREATE TABLE events
 (
 	id SERIAL PRIMARY KEY,
-	creator INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+	creator TEXT REFERENCES users(facebookID) ON DELETE CASCADE NOT NULL,
 	type EVENTTYPE NOT NULL,
 	description TEXT NOT NULL,
 	location TEXT,
@@ -35,7 +41,7 @@ DROP TABLE IF EXISTS confirmations CASCADE;
 CREATE TABLE confirmations
 (
 	id SERIAL PRIMARY KEY,
-	creator INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+	creator TEXT REFERENCES users(facebookID) ON DELETE CASCADE NOT NULL,
 	event INTEGER REFERENCES events(id) ON DELETE CASCADE NOT NULL,
 	type BOOLEAN NOT NULL
 );
@@ -44,7 +50,7 @@ DROP TABLE IF EXISTS comments CASCADE;
 CREATE TABLE comments
 (
 	id SERIAL PRIMARY KEY,
-	writer INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+	writer TEXT REFERENCES users(facebookID) ON DELETE CASCADE NOT NULL,
 	event INTEGER REFERENCES events(id) ON DELETE CASCADE NOT NULL,
 	message TEXT NOT NULL,
 	datetime TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP)
@@ -93,6 +99,6 @@ CREATE TRIGGER update_confirmations
 	EXECUTE PROCEDURE update_confirmations();
 
 INSERT INTO users (facebookID) VALUES ('100000416538494');
-INSERT INTO events (creator, type, description, location, coords) VALUES (1, 0, 'Toyota azul com radar.', 'Em frente à Makro, na Via Norte, sentido Porto - Maia.', ST_GeomFromText('POINT(-8.6273612 41.2018094)'));
-INSERT INTO comments (writer, event, message) VALUES (1, 1, 'Test comment.');
-INSERT INTO confirmations (creator, event, type) VALUES (1, 1, TRUE);
+INSERT INTO events (creator, type, description, location, coords) VALUES ('100000416538494', 0, 'Toyota azul com radar.', 'Em frente à Makro, na Via Norte, sentido Porto - Maia.', ST_GeomFromText('POINT(-8.6273612 41.2018094)'));
+INSERT INTO comments (writer, event, message) VALUES ('100000416538494', 1, 'Test comment.');
+INSERT INTO confirmations (creator, event, type) VALUES ('100000416538494', 1, TRUE);

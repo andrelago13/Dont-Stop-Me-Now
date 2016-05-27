@@ -25,11 +25,13 @@ public class RecentEventView extends LinearLayout {
     private final static int EVENT_DETAIL_CODE = 4321;
 
     public final static String EVENT_ID = "StreetEvent.ID";
+    public final static String EVENT_IS_MINE = "StreetEvent.IS_MINE";
 
     private ImageView icon;
     private TextView description;
     private TextView address;
     private int event_id;
+    private boolean my_event;
 
     public RecentEventView(Context context) {
         this(context, null);
@@ -46,8 +48,13 @@ public class RecentEventView extends LinearLayout {
     }
 
     public RecentEventView(Context context, AttributeSet attrs, int event_id, String description, String address, Event.Type type) {
+        this(context, attrs, event_id, description, address, type, false);
+    }
+
+    public RecentEventView(Context context, AttributeSet attrs, int event_id, String description, String address, Event.Type type, boolean my_event) {
         this(context, attrs);
 
+        this.my_event = my_event;
         this.event_id = event_id;
 
         if(description != null) {
@@ -106,8 +113,8 @@ public class RecentEventView extends LinearLayout {
             public void onClick(View v) {
                 Intent intent = new Intent(context, EventDetailsActivity.class);
                 intent.putExtra(EVENT_ID, event_id);
+                intent.putExtra(EVENT_IS_MINE, my_event);
                 context.startActivity(intent);
-                //context.startActivityForResult(intent, EVENT_DETAIL_CODE);
             }
         });
     }

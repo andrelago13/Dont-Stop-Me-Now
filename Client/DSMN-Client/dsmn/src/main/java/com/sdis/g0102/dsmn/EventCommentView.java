@@ -3,6 +3,8 @@ package com.sdis.g0102.dsmn;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -45,6 +47,14 @@ public class EventCommentView extends LinearLayout {
         user_name_view = (TextView) findViewById(R.id.comment_username);
         content_view = (TextView) findViewById(R.id.comment_content);
         timestamp_view = (TextView) findViewById(R.id.comment_timestamp);
+
+        content_view.setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            }
+        });
 
         user_name_view.setText(this.username);
         content_view.setText(this.content);

@@ -1,8 +1,14 @@
 package com.sdis.g0102.dsmn.api;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.PointF;
+import android.location.Location;
+import android.media.Image;
 
-import com.sdis.g0102.dsmn.domain.StreetEvent;
+import com.sdis.g0102.dsmn.api.domain.Comment;
+import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -11,9 +17,13 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,9 +39,14 @@ import javax.net.ssl.TrustManagerFactory;
 public class API {
     private Context context;
     private URL url;
-    public API(Context context, URL url) {
+    private SSLContext sslContext;
+    private String facebookHash;
+
+    public API(Context context, URL url, String facebookHash) throws GeneralSecurityException, IOException {
         this.context = context;
         this.url = url;
+        this.facebookHash = facebookHash;
+        initSSLContext();
     }
 
     static {
@@ -47,15 +62,15 @@ public class API {
         });
     }
 
-    public List<StreetEvent> listEvents() {
+    public List<StreetEvent> listEvents(boolean onlyMine) {
         try {
-            APIResponse response = sendRequest(new URL(this.url + "events/"), "GET", null);
+            APIResponse response = sendRequest(new URL(this.url + "events?onlymine=" + onlyMine), "GET", null);
             if (isHTTPResponseCodeSuccess(response.getCode())) {
                 JSONArray ja = new JSONArray(new String(response.getMessage()));
                 List<StreetEvent> list = new LinkedList<StreetEvent>();
                 for (int i = 0; i < ja.length(); i++) {
                     JSONObject jo = ja.getJSONObject(i);
-                    StreetEvent streetEvent = new StreetEvent();
+                    StreetEvent streetEvent = generateEventFromJSON(jo);
                     list.add(streetEvent);
                 }
                 return list;
@@ -71,25 +86,272 @@ public class API {
         return null;
     }
 
+    public boolean createEvent(StreetEvent.Type type, String duration, String location) {
+        return createEvent(type, duration, location, null, null);
+    }
+
+    public boolean createEvent(StreetEvent.Type type, String duration, Float longitude, Float latitude) {
+        return createEvent(type, duration, null, longitude, latitude);
+    }
+
+    public boolean createEvent(StreetEvent.Type type, String description, String location, Float longitude, Float latitude) {
+        try {
+            JSONObject jo = new JSONObject();
+            JSONObject joCreateEvent = new JSONObject();
+            joCreateEvent.put("type", type.ordinal());
+            joCreateEvent.put("description", description);
+            if (location != null)
+                joCreateEvent.put("location", location);
+            if (longitude != null)
+                joCreateEvent.put("longitude", longitude);
+            if (latitude != null)
+                joCreateEvent.put("latitude", latitude);
+            jo.put("create_event", joCreateEvent);
+            APIResponse response = sendRequest(new URL(this.url + "events/"), "POST", jo.toString().getBytes());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public StreetEvent getEvent(int eventID) {
+        return getEvent(eventID, null, null);
+    }
+
+    public StreetEvent getEvent(int eventID, Float longitude, Float latitude) {
+        return getEvent(eventID, longitude, latitude, null);
+    }
+
+    public StreetEvent getEvent(int eventID, Float longitude, Float latitude, Float radius) {
+        try {
+            String s = this.url + "events/" + eventID;
+            if (longitude != null && latitude != null) {
+                s += "?longitude=" + longitude + "&latitude=" + latitude;
+                if (radius != null)
+                    s += "radius=" + radius;
+            }
+            APIResponse response = sendRequest(new URL(s), "GET", null);
+            if (isHTTPResponseCodeSuccess(response.getCode())) {
+                return generateEventFromJSON(new JSONObject(new String(response.getMessage())));
+            } else
+                return null;
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean deleteEvent(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID), "GET", null);
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public Bitmap getEventPhoto(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "GET", null);
+            if (isHTTPResponseCodeSuccess(response.getCode())) {
+                Bitmap bmp = BitmapFactory.decodeByteArray(response.getMessage(), 0, response.getMessage().length);
+                return bmp;
+            } else {
+                return null;
+            }
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @param eventID
+     * @return true on success, false otherwise
+     */
+    public boolean setEventPhoto(int eventID, Bitmap photo) {
+        try {
+            ByteBuffer buf = ByteBuffer.allocate(photo.getByteCount());
+            photo.copyPixelsToBuffer(buf);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "PUT", buf.array());
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @param eventID
+     * @return true on success, false otherwise
+     */
+    public boolean deleteEventPhoto(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "DELETE", null);
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<Comment> listEventComments(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/comments"), "GET", null);
+            if (!isHTTPResponseCodeSuccess(response.getCode()))
+                return null;
+            JSONArray ja = new JSONArray(new String(response.getMessage()));
+            List<Comment> comments = new LinkedList<Comment>();
+            for (int i = 0; i < ja.length(); i++) {
+                JSONObject jo = ja.getJSONObject(i);
+                Comment comment = new Comment();
+                comment.id = jo.getInt("id");
+                comment.writer = jo.getInt("writer");
+                comment.event = jo.getInt("event");
+                comment.message = jo.getString("message");
+                comment.datetime = jo.getLong("datetime");
+                comments.add(comment);
+            }
+            return comments;
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean addComment(int eventID, String message) {
+        try {
+            JSONObject jo = new JSONObject();
+            JSONObject joCreateComment = new JSONObject();
+            jo.put("create_comment", joCreateComment);
+            joCreateComment.put("eventid", eventID);
+            joCreateComment.put("message", message);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/comments"), "POST", jo.toString().getBytes());
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean addConfirmation(int eventID, boolean type) {
+        try {
+            JSONObject jo = new JSONObject();
+            JSONObject joCreateComment = new JSONObject();
+            jo.put("event_confirm", joCreateComment);
+            joCreateComment.put("eventid", eventID);
+            joCreateComment.put("type", type);
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/confirmations"), "PUT", jo.toString().getBytes());
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean deleteConfirmation(int eventID) {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/confirmations"), "DELETE", null);
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean requestNotifications(InetAddress address, int port, float longitude, float latitude, float radius) {
+        try {
+            JSONObject jo = new JSONObject();
+            JSONObject joRequestNotification = new JSONObject();
+            jo.put("request_notification", joRequestNotification);
+            joRequestNotification.put("address", address.getHostAddress());
+            joRequestNotification.put("port", port);
+            joRequestNotification.put("longitude", longitude);
+            joRequestNotification.put("latitude", latitude);
+            joRequestNotification.put("radius", radius);
+            APIResponse response = sendRequest(new URL(this.url + "notifications/"), "PUT", jo.toString().getBytes());
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean stopNotifications() {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "notifications/"), "DELETE", null);
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
+        StreetEvent streetEvent = new StreetEvent();
+        streetEvent.id = jo.getInt("id");
+        streetEvent.creator = jo.getInt("creator");
+        int type = jo.getInt("type");
+        StreetEvent.Type[] seTypes = StreetEvent.Type.values();
+        if (type > seTypes.length)
+            return null;
+        streetEvent.type = seTypes[type];
+        streetEvent.description = jo.getString("description");
+        if (jo.has("location"))
+            streetEvent.location = jo.getString("location");
+        if (jo.has("latitude") && jo.has("longitude"))
+            streetEvent.coords = new PointF((float)jo.getDouble("latitude"), (float)jo.getDouble("longitude"));
+        streetEvent.dateTime = new Timestamp(jo.getLong("datetime"));
+        streetEvent.positiveConfirmations = jo.getInt("positiveConfirmations");
+        streetEvent.negativeConfirmations = jo.getInt("negativeConfirmations");
+        return streetEvent;
+    }
+
     private APIResponse sendRequest(URL url, String method, byte[] msg) throws GeneralSecurityException {
         try {
-            // TODO extract this code so it's only run once
-
-            String keyStoreType = KeyStore.getDefaultType();
-            KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-            keyStore.load(context.getAssets().open("keys/truststore.bks"), "123456".toCharArray());
-
-            // Create a TrustManager that trusts the CAs in our KeyStore
-            String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
-            tmf.init(keyStore);
-
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(null, tmf.getTrustManagers(), null);
-
             HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
-            urlConnection.setSSLSocketFactory(context.getSocketFactory());
+            urlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
             urlConnection.setRequestMethod(method);
+            urlConnection.setRequestProperty("Authorization", this.facebookHash);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             InputStream is = urlConnection.getInputStream();
@@ -102,6 +364,20 @@ public class API {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private void initSSLContext() throws GeneralSecurityException, IOException {
+        String keyStoreType = KeyStore.getDefaultType();
+        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+        keyStore.load(context.getAssets().open("keys/truststore.bks"), "123456".toCharArray());
+
+        // Create a TrustManager that trusts the CAs in our KeyStore
+        String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+        tmf.init(keyStore);
+
+        sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, tmf.getTrustManagers(), null);
     }
 
     private boolean isHTTPResponseCodeSuccess(int code) {

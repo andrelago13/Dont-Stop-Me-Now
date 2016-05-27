@@ -4,6 +4,9 @@
         android:id="@+id/recent_events_menu_refresh"
         android:title="Refresh"/>
     <item
+        android:id="@+id/recent_events_menu_myevents"
+        android:title="My Events"/>
+    <item
         android:id="@+id/recent_events_menu_about"
         android:title="About"/>
     <item

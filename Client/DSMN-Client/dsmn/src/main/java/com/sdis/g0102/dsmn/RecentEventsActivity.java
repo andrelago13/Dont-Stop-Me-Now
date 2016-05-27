@@ -32,6 +32,7 @@ import java.util.List;
 public class RecentEventsActivity extends AppCompatActivity {
 
     public final static int CREATE_EVENT_CODE = 1324;
+    public final static int MY_EVENTS_CODE = 1444;
 
     private AlertDialog confirmLogout;
 
@@ -120,6 +121,10 @@ public class RecentEventsActivity extends AppCompatActivity {
                 Log.d("RecentEvents", "\"Refresh\" pressed");
                 this.refreshList();
                 break;
+            case R.id.recent_events_menu_myevents:
+                Log.d("RecentEvents", "\"My Events\" pressed");
+                this.enterMyEvents();
+                break;
             case R.id.recent_events_menu_about:
                 Log.d("RecentEvents", "\"About\" pressed");
                 break;
@@ -129,6 +134,11 @@ public class RecentEventsActivity extends AppCompatActivity {
                 break;
         }
         return true;
+    }
+
+    private void enterMyEvents() {
+        Intent intent = new Intent(this, MyEventsActivity.class);
+        startActivityForResult(intent, MY_EVENTS_CODE);
     }
 
 }

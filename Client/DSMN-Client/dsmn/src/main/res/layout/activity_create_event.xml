@@ -52,6 +52,12 @@
                     android:gravity="center_vertical|center_horizontal" />
             </LinearLayout>
 
+            <LinearLayout
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:layout_width="0px"
+                android:layout_height="0px"/>
+
             <EditText
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
@@ -60,7 +66,56 @@
                 android:maxLines="5"
                 android:nestedScrollingEnabled="true"
                 android:hint="Event description"
-                android:layout_marginTop="15dp" />
+                android:layout_marginTop="15dp"
+                android:nextFocusUp="@id/create_event_description"
+                android:nextFocusLeft="@id/create_event_description" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/no_location_layout"
+                android:layout_marginTop="10dp">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pick Location"
+                    android:id="@+id/pick_location_button"
+                    android:onClick="pickLocation" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/good_location_layout"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:text="Location"
+                    android:id="@+id/location_name" />
+
+                <Button
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Clear"
+                    android:id="@+id/clear_location_button"
+                    android:onClick="clearLocation" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/powered_by_google_light" />
 
             <ImageView
                 android:layout_width="fill_parent"
@@ -88,6 +143,7 @@
                 android:onClick="submit"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="10dp" />
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
