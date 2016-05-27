@@ -127,6 +127,7 @@ public class API {
                 joCreateEvent.put("latitude", latitude);
             jo.put("create_event", joCreateEvent);
             APIResponse response = sendRequest(new URL(this.url + "events/"), "POST", jo.toString().getBytes());
+            return isHTTPResponseCodeSuccess(response.getCode());
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         } catch (MalformedURLException e) {

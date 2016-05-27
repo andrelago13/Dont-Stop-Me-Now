@@ -252,8 +252,6 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void setConfirmState(ConfirmState state) {
-        // TODO send to api
-
         final ConfirmState state_fnl = state;
 
         new Thread( new Runnable() {

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +26,8 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
+import com.sdis.g0102.dsmn.api.API;
+import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 
 import java.io.IOException;
 
@@ -36,7 +39,7 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
     public static final int SELECT_IMAGE = 4132;
     public static final int PLACE_PICKER_REQUEST = 1112;
 
-    private Event.Type event_type = null;
+    private StreetEvent.Type event_type = null;
     private Place event_location = null;
     private String event_description = null;
     private Bitmap event_selected_image = null;
@@ -49,10 +52,14 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
     private TextView location_text;
     private TextView description_text;
 
+    private API api;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
+
+        api = API.getInstance();
 
         event_icon = (ImageView) findViewById(R.id.create_event_type_icon);
         event_image = (ImageView) findViewById(R.id.event_image);
@@ -84,16 +91,16 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
         Log.d("CreateEventActivity", "Selected: " + selected);
 
         if(selected.equals("Vehicle Crash")) {
-            event_type = Event.Type.CRASH;
+            event_type = StreetEvent.Type.CAR_CRASH;
             event_icon.setImageResource(R.drawable.event_crash);
         } else if(selected.equals("Speed Radar")) {
-            event_type = Event.Type.RADAR;
+            event_type = StreetEvent.Type.SPEED_RADAR;
             event_icon.setImageResource(R.drawable.event_camera);
         } else if(selected.equals("Slow Traffic")) {
-            event_type = Event.Type.TRAFFIC;
+            event_type = StreetEvent.Type.HIGH_TRAFFIC;
             event_icon.setImageResource(R.drawable.event_traffic);
         } else if(selected.equals("Traffic Stop")) {
-            event_type = Event.Type.STOP;
+            event_type = StreetEvent.Type.TRAFFIC_STOP;
             event_icon.setImageResource(R.drawable.event_stop);
         }
     }
@@ -168,8 +175,25 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
     }
 
     private void actualSubmit() {
-        // TODO send with api
-        Toast.makeText(this, "Submitted", Toast.LENGTH_LONG).show();
+        final Activity this_t = this;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                if(api.createEvent(event_type, event_description, event_location.getName().toString(), (float)event_location.getLatLng().latitude, (float)event_location.getLatLng().longitude)){
+                    Log.d("CreateEventActivity", "Created event.");
+                    this_t.finish();
+                } else {
+                    Log.d("CreateEventActivity", "Unable to create event.");
+                    Toast.makeText(this_t.getApplicationContext(), "Unable to create event.", Toast.LENGTH_LONG);
+                }
+
+                // TODO acabar
+                /*if(event_selected_image != null) {
+                    api.setEventPhoto(event_id, event_selected_image);
+                }*/
+            }
+        }).start();
     }
 
     public void pickLocation(View v) {
