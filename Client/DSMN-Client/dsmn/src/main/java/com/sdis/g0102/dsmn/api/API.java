@@ -371,6 +371,8 @@ public class API {
             urlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
             urlConnection.setRequestMethod(method);
             urlConnection.setRequestProperty("Authorization", this.facebookHash);
+            if(msg != null)
+                urlConnection.getOutputStream().write(msg);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             InputStream is = urlConnection.getInputStream();

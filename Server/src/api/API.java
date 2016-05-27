@@ -69,6 +69,9 @@ public class API implements HttpHandler {
 			respond(t, formatError(method, null, "Authentication failed"), 401);
 			return;
 		}
+		PreparedStatement stmt = this.db.prepareStatement("INSERT INTO Users (facebookid) VALUES (?) ON CONFLICT DO NOTHING");
+		stmt.setString(1, facebookID);
+		stmt.executeUpdate();
 
 		InputStream is = t.getRequestBody();
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -401,18 +404,18 @@ public class API implements HttpHandler {
 		}
 		case "POST": {
 			try {
-				JSONObject jo = new JSONObject(body).getJSONObject("create_comment");
+				JSONObject jo = new JSONObject(new String(body)).getJSONObject("create_comment");
 				PreparedStatement stmt = this.db.prepareStatement(
 						"INSERT INTO Comments (writer, event, message) VALUES (?, ?, ?)");
 				stmt.setString(1, facebookID);
 				stmt.setInt(2, jo.getInt("eventid"));
 				stmt.setString(3, jo.getString("message"));
-
 				if (stmt.executeUpdate() == 0)
 					respond(t, formatError(method, query, "Invalid request parameters."), 400);
 				else
 					respond(t, formatSuccess(method, query), 200);
 			} catch (JSONException e) {
+				e.printStackTrace();
 				respond(t, formatError(method, query, "Invalid request body."), 400);
 			}
 			break;
@@ -473,7 +476,9 @@ public class API implements HttpHandler {
 		JSONObject jo = new JSONObject();
 		jo.put("id", rs.getInt("id"));
 		jo.put("message", rs.getString("message"));
-		jo.put("datetime", rs.getTimestamp("datetime"));
+		jo.put("datetime", rs.getTimestamp("datetime").getTime());
+		jo.put("event", rs.getInt("event"));
+		jo.put("writer", rs.getString("writer"));
 		return jo;
 	}
 

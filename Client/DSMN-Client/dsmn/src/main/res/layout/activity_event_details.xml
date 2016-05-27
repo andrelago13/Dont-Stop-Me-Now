@@ -7,15 +7,29 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.sdis.g0102.dsmn.EventDetailsActivity"
-    android:layout_width="wrap_content"
+    android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:id="@+id/scrollView"
     android:nestedScrollingEnabled="true">
 
 <LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:id="@+id/whole_layout"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/loadingPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center" >
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="visible" />
+    </RelativeLayout>
 
     <Button
         android:layout_width="wrap_content"
@@ -63,7 +77,7 @@
     </LinearLayout>
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Small Text asda sdfsd fasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df aasdfa sdfasd fas dfasdf asdf asdf asdf asdf asd fasdgasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df agasfdgs h hddfs gadf hsfdasd gfasdfasdg asdfasd fasdfasd fasdfasd fasdf asdf asdfasdf asdfas df asdfas dfawe frdg dfg asdf"
@@ -96,11 +110,22 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Confirm event:"
-            android:layout_weight="1"
+            android:layout_weight="3"
             android:textAlignment="gravity"
             android:gravity="right"
             android:paddingRight="6dp"
             android:layout_gravity="center_vertical" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="543"
+            android:id="@+id/positiveConfText"
+            android:layout_weight="5"
+            android:layout_gravity="center_vertical|right"
+            android:textAlignment="gravity"
+            android:gravity="center_vertical|right" />
 
         <ImageView
             android:layout_width="match_parent"
@@ -110,12 +135,22 @@
             android:layout_gravity="center"
             android:src="@mipmap/event_confirm_true" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="543"
+            android:id="@+id/negativeConfText"
+            android:layout_weight="5"
+            android:layout_gravity="center_vertical|right"
+            android:textAlignment="gravity"
+            android:gravity="center_vertical|right" />
+
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/confirmButtonFalse"
             android:layout_weight="5"
-            android:layout_gravity="center"
             android:src="@mipmap/event_confirm_false" />
     </LinearLayout>
 
