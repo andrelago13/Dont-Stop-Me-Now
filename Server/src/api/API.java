@@ -473,7 +473,7 @@ public class API implements HttpHandler {
 		jo.put("datetime", rs.getTimestamp("datetime"));
 		return jo;
 	}
-
+	
 	/***********************************
 	 ************** UTILS **************
 	 ***********************************/
