@@ -32,6 +32,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import jdk.nashorn.internal.scripts.JO;
+import server.FacebookServer;
 
 public class API implements HttpHandler {
 	Connection db;
@@ -63,7 +64,8 @@ public class API implements HttpHandler {
 	private void process(HttpExchange t, String method, String[] paths, Map<String, String> query)
 			throws IOException, SQLException {
 
-		if (!checkAuth(t)) {
+		String facebookID = getFacebookID(t);
+		if (facebookID == null) {
 			respond(t, formatError(method, null, "Authentication failed"), 401);
 			return;
 		}
@@ -79,10 +81,10 @@ public class API implements HttpHandler {
 
 		switch (paths[pathOffset]) {
 		case "events":
-			eventsEndpoint(t, method, paths, query, body);
+			eventsEndpoint(t, method, paths, query, body, facebookID);
 			break;
 		case "notifications":
-			notificationsEndpoint(t, method, paths, query, body);
+			notificationsEndpoint(t, method, paths, query, body, facebookID);
 			break;
 		default: {
 			respond(t, formatError(method, query, "Page not found."), 404);
@@ -91,13 +93,13 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private boolean checkAuth(HttpExchange t) {
+	private String getFacebookID(HttpExchange t) {
 		String token = t.getRequestHeaders().getFirst("Authorization");
-		System.out.println("Token: " + token);
-		return true;
+		if (token == null) return null;
+		return FacebookServer.tokenValidation(token);
 	}
 
-	private void notificationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body) throws IOException, SQLException {
+	private void notificationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, String facebookID) throws IOException, SQLException {
 		switch (method) {
 		case "PUT": {
 			JSONObject jo = new JSONObject(body).getJSONObject("request_notification");
@@ -108,7 +110,7 @@ public class API implements HttpHandler {
 			stmt.setFloat(3, (float)jo.getDouble("longitude"));
 			stmt.setFloat(4, (float)jo.getDouble("latitude"));
 			stmt.setFloat(5, (float)jo.getDouble("radius"));
-			stmt.setFloat(6, 1); // TODO
+			stmt.setString(6, facebookID);
 			
 			if (stmt.executeUpdate() == 0)
 				respond(t, formatError(method, query, "Invalid request parameters."), 400);
@@ -120,7 +122,7 @@ public class API implements HttpHandler {
 		{
 			PreparedStatement stmt = this.db.prepareStatement(
 					"UPDATE Users SET address = NULL, port = NULL, coords = NULL, radius = NULL WHERE facebookID = ?");
-			stmt.setInt(1, 1); // TODO
+			stmt.setString(1, facebookID);
 			break;
 		}
 		default:
@@ -129,15 +131,15 @@ public class API implements HttpHandler {
 		return;
 	}
 
-	private void eventsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body)
+	private void eventsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, String facebookID)
 			throws IOException, SQLException {
 		if (paths.length < pathOffset + 2) { //events/
 			switch (method) {
 			case "GET":
-				eventList(t, method, paths, query);
+				eventList(t, method, paths, query, facebookID);
 				break;
 			case "POST":
-				eventCreate(t, method, paths, query, body);
+				eventCreate(t, method, paths, query, body, facebookID);
 				break;
 			default:
 				respond(t, formatError(method, query, "Invalid method."), 404);
@@ -154,13 +156,13 @@ public class API implements HttpHandler {
 		if (paths.length >= pathOffset + 3) { //events/<id>/...
 			switch (paths[pathOffset + 2]) {
 			case "comments":
-				eventCommentsEndpoint(t, method, paths, query, body, eventID);
+				eventCommentsEndpoint(t, method, paths, query, body, eventID, facebookID);
 				break;
 			case "confirmations":
-				eventConfirmationsEndpoint(t, method, paths, query, body, eventID);
+				eventConfirmationsEndpoint(t, method, paths, query, body, eventID, facebookID);
 				break;
 			case "photo":
-				eventPhotoEndpoint(t, method, paths, query, body, eventID);
+				eventPhotoEndpoint(t, method, paths, query, body, eventID, facebookID);
 			default:
 				respond(t, formatError(method, query, "Unknown verb '" + paths[pathOffset + 1] + "'."), 404);
 			}
@@ -190,13 +192,13 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventCreate(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body)
+	private void eventCreate(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, String facebookID)
 			throws IOException, SQLException {
 		try {
 			JSONObject jo = new JSONObject(body).getJSONObject("create_event");
 			PreparedStatement stmt = this.db.prepareStatement(
 					"INSERT INTO Events (creator, type, description, location, coords) VALUES (?, ?, ?, ?, Geography(Point(?, ?)::geometry))");
-			stmt.setInt(1, 1); // TODO;
+			stmt.setString(1, facebookID);
 			stmt.setInt(2, jo.getInt("type"));
 			stmt.setString(3, jo.getString("description"));
 
@@ -257,7 +259,7 @@ public class API implements HttpHandler {
 		return jo;
 	}
 
-	private void eventList(HttpExchange t, String method, String[] paths, Map<String, String> query)
+	private void eventList(HttpExchange t, String method, String[] paths, Map<String, String> query, String facebookID)
 			throws IOException, SQLException {
 		if (!method.equals("GET")) {
 			String response = formatError(method, query, "Invalid method.");
@@ -275,7 +277,7 @@ public class API implements HttpHandler {
 						);
 				PreparedStatement ps = (PreparedStatement) stmt;
 				if (onlymine)
-					ps.setInt(1, 1); // TODO
+					ps.setString(1, facebookID);
 				rs = ps.executeQuery();
 			} else {
 				Float radius = null;
@@ -310,7 +312,7 @@ public class API implements HttpHandler {
 					ps.setFloat(index++, radius);
 				}
 				if (onlymine)
-					ps.setFloat(index++, 1); // TODO
+					ps.setString(index++, facebookID);
 				rs = ps.executeQuery();
 			}
 			JSONArray ja = new JSONArray();
@@ -323,7 +325,7 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventPhotoEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID) throws IOException, SQLException {
+	private void eventPhotoEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID, String facebookID) throws IOException, SQLException {
 		switch (method) {
 		case "GET": {
 			PreparedStatement stmt = this.db.prepareStatement("SELECT photo FROM events WHERE id = ?");
@@ -348,9 +350,10 @@ public class API implements HttpHandler {
 			break;
 		}
 		case "PUT": {
-			PreparedStatement stmt = this.db.prepareStatement("UPDATE Events SET photo = ? WHERE id = ?");
+			PreparedStatement stmt = this.db.prepareStatement("UPDATE Events SET photo = ? WHERE id = ? AND creator = ?");
 			stmt.setBytes(1, body);
 			stmt.setInt(2, eventID);
+			stmt.setString(3, facebookID);
 
 			if (stmt.executeUpdate() == 0)
 				respond(t, formatError(method, query, "Invalid request parameters."), 400);
@@ -360,8 +363,9 @@ public class API implements HttpHandler {
 			break;
 		}
 		case "DELETE": {
-			PreparedStatement stmt = this.db.prepareStatement("UPDATE Events SET photo = NULL WHERE id = ?");
+			PreparedStatement stmt = this.db.prepareStatement("UPDATE Events SET photo = NULL WHERE id = ? AND creator = ?");
 			stmt.setInt(1, eventID);
+			stmt.setString(2, facebookID);
 
 			if (stmt.executeUpdate() == 0)
 				respond(t, formatError(method, query, "Invalid request parameters."), 400);
@@ -377,7 +381,7 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventCommentsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID) throws IOException, SQLException {
+	private void eventCommentsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID, String facebookID) throws IOException, SQLException {
 		switch (method) {
 		case "GET": {
 			PreparedStatement stmt = this.db.prepareStatement("SELECT * FROM Comments WHERE Comments.event = ? ORDER BY datetime DESC");
@@ -396,9 +400,10 @@ public class API implements HttpHandler {
 			try {
 				JSONObject jo = new JSONObject(body).getJSONObject("create_comment");
 				PreparedStatement stmt = this.db.prepareStatement(
-						"INSERT INTO Comments (event, message) VALUES (?, ?)");
-				stmt.setInt(1, jo.getInt("eventid"));
-				stmt.setString(2, jo.getString("message"));
+						"INSERT INTO Comments (writer, event, message) VALUES (?, ?, ?)");
+				stmt.setString(1, facebookID);
+				stmt.setInt(2, jo.getInt("eventid"));
+				stmt.setString(3, jo.getString("message"));
 
 				if (stmt.executeUpdate() == 0)
 					respond(t, formatError(method, query, "Invalid request parameters."), 400);
@@ -416,18 +421,18 @@ public class API implements HttpHandler {
 		}
 	}
 
-	private void eventConfirmationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID) throws IOException, SQLException {
+	private void eventConfirmationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, int eventID, String facebookID) throws IOException, SQLException {
 		switch (method) {
 		case "PUT": {
 			try {
 				JSONObject jo = new JSONObject(body).getJSONObject("event_confirm");
 				PreparedStatement stmt = this.db.prepareStatement(
 						"INSERT INTO Confirmations (creator, type, event) VALUES (?, ?, ?) ON CONFLICT DO UPDATE SET type = ? WHERE creator = ? AND event = ?");
-				stmt.setInt(1, 1); // TODO
+				stmt.setString(1, facebookID);
 				stmt.setBoolean(2, jo.getBoolean("type"));
 				stmt.setInt(3, jo.getInt("eventid"));
 				stmt.setBoolean(3, jo.getBoolean("type"));
-				stmt.setInt(4, 1); // TODO
+				stmt.setString(4, facebookID);
 				stmt.setInt(5, jo.getInt("eventid"));
 
 				if (stmt.executeUpdate() == 0)
@@ -444,7 +449,7 @@ public class API implements HttpHandler {
 				JSONObject jo = new JSONObject(body).getJSONObject("event_confirm");
 				PreparedStatement stmt = this.db.prepareStatement("DELETE FROM Confirmations WHERE event = ? AND creator = ?");
 				stmt.setInt(1, jo.getInt("eventid"));
-				stmt.setInt(2, 1); // TODO
+				stmt.setString(2, facebookID);
 				if (stmt.executeUpdate() == 0)
 					respond(t, formatError(method, query, "No confirmation to delete."), 404);
 				else
