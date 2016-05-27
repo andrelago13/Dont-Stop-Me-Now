@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users
 (
 	facebookID TEXT PRIMARY KEY,
-	address TEXT,
+	address INET,
 	port INTEGER,
 	coords GEOGRAPHY(POINT,4326),
 	radius NUMERIC(7, 3),
