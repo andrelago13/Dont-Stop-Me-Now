@@ -17,6 +17,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -282,6 +283,40 @@ public class API {
     public boolean deleteConfirmation(int eventID) {
         try {
             APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/confirmations"), "DELETE", null);
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean requestNotifications(InetAddress address, int port, float longitude, float latitude, float radius) {
+        try {
+            JSONObject jo = new JSONObject();
+            JSONObject joRequestNotification = new JSONObject();
+            jo.put("request_notification", joRequestNotification);
+            joRequestNotification.put("address", address.getHostAddress());
+            joRequestNotification.put("port", port);
+            joRequestNotification.put("longitude", longitude);
+            joRequestNotification.put("latitude", latitude);
+            joRequestNotification.put("radius", radius);
+            APIResponse response = sendRequest(new URL(this.url + "notifications/"), "PUT", jo.toString().getBytes());
+            return isHTTPResponseCodeSuccess(response.getCode());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean stopNotifications() {
+        try {
+            APIResponse response = sendRequest(new URL(this.url + "notifications/"), "DELETE", null);
             return isHTTPResponseCodeSuccess(response.getCode());
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
