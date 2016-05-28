@@ -33,6 +33,7 @@ import com.facebook.login.LoginManager;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.sdis.g0102.dsmn.api.API;
 import com.sdis.g0102.dsmn.api.domain.StreetEvent;
+import com.sdis.g0102.dsmn.fcm.MyFirebaseMessagingService;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -87,7 +88,7 @@ public class RecentEventsActivity extends AppCompatActivity {
 
     private void fetchEvents() {
         final Activity this_t = this;
-        new Thread( new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -98,17 +99,17 @@ public class RecentEventsActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                     Log.d("RecentEventsActivity", "Unable to connect to DSMN server. (Exception 1)");
-                    Toast.makeText(this_t.getBaseContext(),"Unable to connect to DSMN server. (Exception 1)", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this_t.getBaseContext(), "Unable to connect to DSMN server. (Exception 1)", Toast.LENGTH_SHORT).show();
                     this_t.finish();
                 } catch (GeneralSecurityException e) {
                     e.printStackTrace();
                     Log.d("RecentEventsActivity", "Unable to connect to DSMN server. (Exception 2)");
-                    Toast.makeText(this_t.getBaseContext(),"Unable to connect to DSMN server. (Exception 2)", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this_t.getBaseContext(), "Unable to connect to DSMN server. (Exception 2)", Toast.LENGTH_SHORT).show();
                     this_t.finish();
                 } catch (Exception e) {
                     e.printStackTrace();
                     Log.d("RecentEventsActivity", "Unable to connect to DSMN server. (Exception 3)");
-                    Toast.makeText(this_t.getBaseContext(),"Unable to connect to DSMN server. (Exception 3)", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this_t.getBaseContext(), "Unable to connect to DSMN server. (Exception 3)", Toast.LENGTH_SHORT).show();
                     this_t.finish();
                 }
             }
@@ -176,8 +177,7 @@ public class RecentEventsActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId())
-        {
+        switch (item.getItemId()) {
             case R.id.recent_events_menu_refresh:
                 Log.d("RecentEvents", "\"Refresh\" pressed");
                 this.refreshList();
@@ -206,7 +206,7 @@ public class RecentEventsActivity extends AppCompatActivity {
     }
 
     private void changeSubscription(boolean state) {
-        if(state) {
+        if (state) {
             FirebaseMessaging.getInstance().subscribeToTopic("events");
             Log.d("RecentEventsActivity", "Subscribed to \"events\" topic");
 
@@ -237,6 +237,9 @@ public class RecentEventsActivity extends AppCompatActivity {
     }
 
     private void eventsLoaded(List<StreetEvent> events) {
+        if(events == null)
+            return;
+
         final RelativeLayout loading_final = loading;
         final Context ctx = this;
         final List<StreetEvent> list_events = events;
@@ -245,7 +248,7 @@ public class RecentEventsActivity extends AppCompatActivity {
             @Override
             public void run() {
                 loading_final.setVisibility(View.GONE);
-                for(StreetEvent event : list_events) {
+                for (StreetEvent event : list_events) {
                     RecentEventView b = new RecentEventView(ctx, null, event);
                     ll.addView(b);
                 }
