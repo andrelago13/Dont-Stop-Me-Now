@@ -1,9 +1,10 @@
 package server;
+
 import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.security.KeyStore;
+import java.util.UUID;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -12,19 +13,17 @@ import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 
 import api.API;
-import server.protocol.Channel;
-import server.protocol.listener.*;
+import server.Server.Type;
+import server.protocol.*;
 
 public class Server {
 	public enum Type{
-		Primary,
-		Backup
+		PRIMARY,
+		BACKUP
 	}
 	
-	private Channel channel;
-	private Listener putListener;
-	private Listener storedListener;
 	private Type type;
+	private SocketListener scktListener;
 	
 	public static void main(String[] args) throws Exception {
 		Server server = new Server(args);
@@ -34,25 +33,21 @@ public class Server {
 		this.setupServerSync(args);
 		
 		this.setHttpsConnection();
-		
-		this.channel.open();
-		this.putListener.start();
-		this.storedListener.start();
 	}
-	
 
 	private void setupServerSync(String[] args) throws Exception {
 		if (!this.validateArgs(args)) {
 			System.out.println("Usage: Server <InetAddress_address> <Integer_port>");
 			System.exit(1);
 		}
-		this.channel = new Channel(InetAddress.getByName(args[0]), Integer.parseInt(args[1]));
-		this.putListener = new PutListener(this.channel);
-		this.storedListener = new StoredListener(this.channel);
+		
+		this.scktListener = new SocketListener(this, args[0], Integer.parseInt(args[1]));
+		
+		this.scktListener.start();
 	}
 
 	private boolean validateArgs(String[] args) {
-		return args.length >= 2;
+		return args.length >= 3;
 	}
 	
 	private void setHttpsConnection() throws Exception {
@@ -73,4 +68,17 @@ public class Server {
 	    sslContext.init(kmf.getKeyManagers(), null, null);
 	    return sslContext;
     }
+	
+	public void setType(Server.Type order) {
+		this.type = order;
+		if(this.type == Server.Type.PRIMARY)
+			System.out.println("Server set as PRIMARY SERVER");
+		else if(this.type == Server.Type.BACKUP)
+			System.out.println("Server set as BACKUP SERVER");
+		
+	}
+
+	public Server.Type getType() {
+		return this.type;
+	}
 }
