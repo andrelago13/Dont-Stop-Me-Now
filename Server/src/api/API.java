@@ -520,6 +520,11 @@ public class API implements HttpHandler {
 		JSONObject joEvent = new JSONObject();
 		joEvent.put("event", eventResultToJSON(rs));
 		jo.put("data", joEvent);
+		JSONObject joNotification = new JSONObject();
+		joNotification.put("title", joEvent.getString("description"));
+		if (joEvent.has("location"))
+			joNotification.put("body", joEvent.getString("location"));
+		jo.put("notification", joNotification);
 		
 		OutputStream os = con.getOutputStream();
 		os.write(jo.toString().getBytes());
