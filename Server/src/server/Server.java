@@ -30,12 +30,6 @@ public class Server {
 		server.createContext("/api", api);
 		server.setExecutor(null);
 		server.start();
-		System.out.println("Started");
-		if(api.notifyEvent(6)) {
-			System.out.println("ok");
-		} else {
-			System.out.println("no");
-		}
 	}
 	
 	private static SSLContext createSSLContext() throws Exception {
