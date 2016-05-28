@@ -180,18 +180,24 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
             @Override
             public void run() {
                 Looper.prepare();
-                if(api.createEvent(event_type, event_description, event_location.getName().toString(), (float)event_location.getLatLng().latitude, (float)event_location.getLatLng().longitude) != null){
+                Integer event_id = api.createEvent(event_type, event_description, event_location.getName().toString(), (float)event_location.getLatLng().latitude, (float)event_location.getLatLng().longitude);
+                if(event_id != null){
                     Log.d("CreateEventActivity", "Created event.");
-                    this_t.finish();
                 } else {
                     Log.d("CreateEventActivity", "Unable to create event.");
                     Toast.makeText(this_t.getApplicationContext(), "Unable to create event.", Toast.LENGTH_LONG);
+                    return;
                 }
 
-                // TODO acabar
-                /*if(event_selected_image != null) {
-                    api.setEventPhoto(event_id, event_selected_image);
-                }*/
+                if(event_selected_image != null) {
+                    if(!api.setEventPhoto(event_id, event_selected_image)) {
+                        Log.d("CreateEventActivity", "Unable to upload event photo.");
+                    } else {
+                        Log.d("CreateEventActivity", "Event photo uploaded.");
+                    }
+                }
+
+                this_t.finish();
             }
         }).start();
     }

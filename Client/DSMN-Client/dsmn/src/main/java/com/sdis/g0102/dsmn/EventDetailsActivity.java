@@ -383,10 +383,11 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void pictureFetched(Bitmap bitmap) {
-        if(bitmap == null)
+        if(bitmap == null) {
+            Log.d("EventDetailsActivity", "Bitmap came as null.");
             return;
+        }
 
-        // TODO test this after adding picture to create event
         final Bitmap bitmap_fnl = bitmap;
         runOnUiThread(new Runnable() {
             @Override

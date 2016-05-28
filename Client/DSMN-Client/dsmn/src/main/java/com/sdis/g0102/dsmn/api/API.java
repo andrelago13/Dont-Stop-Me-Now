@@ -211,7 +211,11 @@ public class API {
         try {
             APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "GET", null);
             if (isHTTPResponseCodeSuccess(response.getCode())) {
-                Bitmap bmp = BitmapFactory.decodeByteArray(response.getMessage(), 0, response.getMessage().length);
+                Log.d("test", "test1  " + response.getMessage().length);
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inMutable = true;
+                Bitmap bmp = BitmapFactory.decodeByteArray(response.getMessage(), 0, response.getMessage().length, options);
+                Log.d("test", "test2");
                 return bmp;
             } else {
                 return null;
@@ -231,9 +235,10 @@ public class API {
      */
     public boolean setEventPhoto(int eventID, Bitmap photo) {
         try {
-            ByteBuffer buf = ByteBuffer.allocate(photo.getByteCount());
-            photo.copyPixelsToBuffer(buf);
-            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "PUT", buf.array());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            photo.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] imageBytes = baos.toByteArray();
+            APIResponse response = sendRequest(new URL(this.url + "events/" + eventID + "/photo"), "PUT", imageBytes);
             return isHTTPResponseCodeSuccess(response.getCode());
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
