@@ -34,15 +34,18 @@ import com.sun.net.httpserver.HttpHandler;
 
 import jdk.nashorn.internal.scripts.JO;
 import server.FacebookServer;
+import server.NotificationDispatcher;
 
 public class API implements HttpHandler {
 	Connection db;
+	NotificationDispatcher notificationDispatcher;
 	int pathOffset;
 
-	public API(int pathOffset) throws ClassNotFoundException, SQLException {
+	public API(int pathOffset, String hostname, String username, String password) throws ClassNotFoundException, SQLException {
 		Class.forName("org.postgresql.Driver");
-		this.db = DriverManager.getConnection("jdbc:postgresql://localhost/", "postgres", "123456");
+		this.db = DriverManager.getConnection("jdbc:postgresql://" + hostname + "/", username, password);
 		this.pathOffset = pathOffset;
+		notificationDispatcher = new NotificationDispatcher(db);
 	}
 
 	@Override
@@ -225,6 +228,7 @@ public class API implements HttpHandler {
 				int eventID = stmt.getGeneratedKeys().getInt("id");
 				query.put("eventid", "" + eventID);
 				respond(t, formatSuccess(method, query), 200);
+				this.notificationDispatcher.notifyEvent(eventID);
 			}
 		} catch (JSONException e) {
 			respond(t, formatError(method, query, "Invalid request body."), 400);

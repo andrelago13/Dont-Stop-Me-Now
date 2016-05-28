@@ -26,7 +26,7 @@ public class Server {
 	private Server() throws Exception {
 		HttpsServer server = HttpsServer.create(new InetSocketAddress(443), 0);
 		server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
-		server.createContext("/api", new API(1));
+		server.createContext("/api", new API(1, "localhost", "postgres", "password"));
 		server.setExecutor(null);
 		server.start();
 	}

@@ -19,7 +19,7 @@ public class NotificationDispatcher {
 		this.db = db;
 		this.threadPool = Executors.newFixedThreadPool(20);
 	}
-	
+
 	public void notifyEvent(int eventID) throws SQLException, UnknownHostException {
 		PreparedStatement ps = this.db.prepareStatement("SELECT facebookID, address, port FROM Users, Events WHERE"
 				+ "Users.coords IS NOT NULL"
@@ -33,8 +33,9 @@ public class NotificationDispatcher {
 			this.threadPool.execute(new ClientNotifier(eventID, address, port));
 		}
 	}
-	
+
 	public class ClientNotifier implements Runnable {
+		public static final int NUM_TRIES = 5;
 		private int eventID;
 		private InetAddress address;
 		private int port;
@@ -45,15 +46,18 @@ public class NotificationDispatcher {
 		}
 		@Override
 		public void run() {
-			try {
-				Socket s = new Socket(address, port);
-				s.getOutputStream().write(eventID);
-				s.close();
-			} catch (IOException e) {
-				e.printStackTrace(); // TODO
+			int numTries = 0;
+			while (numTries < NUM_TRIES) {
+				try {
+					Socket s = new Socket(address, port);
+					s.getOutputStream().write(eventID);
+					s.close();
+					return;
+				} catch (IOException e) {
+					e.printStackTrace(); // TODO
+				}
+				numTries++;
 			}
-			
 		}
-		
 	}
 }
