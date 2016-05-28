@@ -30,6 +30,7 @@ import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.sdis.g0102.dsmn.api.API;
 import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 
@@ -58,6 +59,22 @@ public class RecentEventsActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         loading = (RelativeLayout) findViewById(R.id.loadingPanel);
         setSupportActionBar(toolbar);
+
+        /*new Thread( new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int i = 0;
+                    while(i++ < 20) {
+                        Log.d("test", "iter " + i);
+                        Thread.sleep(1000);
+                    }
+                } catch (Exception e) {
+                    Log.d("test", "left");
+                }
+                Log.d("test", "done");
+            }
+        }).start();*/
 
         fetchEvents();
 

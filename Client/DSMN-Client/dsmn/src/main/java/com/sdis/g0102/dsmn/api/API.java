@@ -89,7 +89,7 @@ public class API {
                 List<StreetEvent> list = new LinkedList<StreetEvent>();
                 for (int i = 0; i < ja.length(); i++) {
                     JSONObject jo = ja.getJSONObject(i);
-                    StreetEvent streetEvent = generateEventFromJSON(jo);
+                    StreetEvent streetEvent = new StreetEvent(jo);
                     list.add(streetEvent);
                 }
                 return list;
@@ -182,7 +182,7 @@ public class API {
             }
             APIResponse response = sendRequest(new URL(s), "GET", null);
             if (isHTTPResponseCodeSuccess(response.getCode())) {
-                return generateEventFromJSON(new JSONObject(new String(response.getMessage())));
+                return new StreetEvent(new JSONObject(new String(response.getMessage())));
             } else
                 return null;
         } catch (GeneralSecurityException e) {
@@ -377,7 +377,7 @@ public class API {
         return false;
     }
 
-    private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
+    /*private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
         StreetEvent streetEvent = new StreetEvent();
         streetEvent.id = jo.getInt("id");
         streetEvent.creator = jo.getString("creator");
@@ -395,7 +395,7 @@ public class API {
         streetEvent.positiveConfirmations = jo.getInt("positiveConfirmations");
         streetEvent.negativeConfirmations = jo.getInt("negativeConfirmations");
         return streetEvent;
-    }
+    }*/
 
     private APIResponse sendRequest(URL url, String method, byte[] msg) throws GeneralSecurityException {
         try {

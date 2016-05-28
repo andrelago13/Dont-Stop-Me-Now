@@ -26,6 +26,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.places.Places;
 import com.sdis.g0102.dsmn.api.API;
+import com.sdis.g0102.dsmn.fcm.FCMActivity;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
