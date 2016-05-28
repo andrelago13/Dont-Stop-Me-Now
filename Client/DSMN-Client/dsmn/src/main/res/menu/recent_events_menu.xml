@@ -4,6 +4,12 @@
         android:id="@+id/recent_events_menu_refresh"
         android:title="Refresh"/>
     <item
+        android:id="@+id/recent_events_menu_subscribe"
+        android:title="Subscribe"/>
+    <item
+        android:id="@+id/recent_events_menu_unsubscribe"
+        android:title="Unsubscribe"/>
+    <item
         android:id="@+id/recent_events_menu_myevents"
         android:title="My Events"/>
     <item

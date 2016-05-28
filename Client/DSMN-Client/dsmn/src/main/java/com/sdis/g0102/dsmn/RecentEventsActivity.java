@@ -193,8 +193,42 @@ public class RecentEventsActivity extends AppCompatActivity {
                 Log.d("RecentEvents", "\"Logout\" pressed");
                 confirmLogout.show();
                 break;
+            case R.id.recent_events_menu_subscribe:
+                Log.d("RecentEvents", "\"Subscribe\" pressed");
+                changeSubscription(true);
+                break;
+            case R.id.recent_events_menu_unsubscribe:
+                Log.d("RecentEvents", "\"Unsubscribe\" pressed");
+                changeSubscription(false);
+                break;
         }
         return true;
+    }
+
+    private void changeSubscription(boolean state) {
+        if(state) {
+            FirebaseMessaging.getInstance().subscribeToTopic("events");
+            Log.d("RecentEventsActivity", "Subscribed to \"events\" topic");
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Subsribed to \"events\" notifications.")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                        }
+                    });
+            builder.create().show();
+        } else {
+            FirebaseMessaging.getInstance().unsubscribeFromTopic("events");
+            Log.d("RecentEventsActivity", "Unsubscribed from \"events\" topic");
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Unsubsribed from \"events\" notifications.")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                        }
+                    });
+            builder.create().show();
+        }
     }
 
     private void enterMyEvents() {
