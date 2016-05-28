@@ -89,7 +89,7 @@ public class API {
                 List<StreetEvent> list = new LinkedList<StreetEvent>();
                 for (int i = 0; i < ja.length(); i++) {
                     JSONObject jo = ja.getJSONObject(i);
-                    StreetEvent streetEvent = generateEventFromJSON(jo);
+                    StreetEvent streetEvent = new StreetEvent(jo);
                     list.add(streetEvent);
                 }
                 return list;
@@ -182,7 +182,7 @@ public class API {
             }
             APIResponse response = sendRequest(new URL(s), "GET", null);
             if (isHTTPResponseCodeSuccess(response.getCode())) {
-                return generateEventFromJSON(new JSONObject(new String(response.getMessage())));
+                return new StreetEvent(new JSONObject(new String(response.getMessage())));
             } else
                 return null;
         } catch (GeneralSecurityException e) {
@@ -375,26 +375,6 @@ public class API {
             e.printStackTrace();
         }
         return false;
-    }
-
-    private StreetEvent generateEventFromJSON(JSONObject jo) throws JSONException {
-        StreetEvent streetEvent = new StreetEvent();
-        streetEvent.id = jo.getInt("id");
-        streetEvent.creator = jo.getString("creator");
-        int type = jo.getInt("type");
-        StreetEvent.Type[] seTypes = StreetEvent.Type.values();
-        if (type > seTypes.length)
-            return null;
-        streetEvent.type = seTypes[type];
-        streetEvent.description = jo.getString("description");
-        if (jo.has("location"))
-            streetEvent.location = jo.getString("location");
-        if (jo.has("latitude") && jo.has("longitude"))
-            streetEvent.coords = new PointF((float)jo.getDouble("latitude"), (float)jo.getDouble("longitude"));
-        streetEvent.dateTime = new Timestamp(jo.getLong("datetime"));
-        streetEvent.positiveConfirmations = jo.getInt("positiveConfirmations");
-        streetEvent.negativeConfirmations = jo.getInt("negativeConfirmations");
-        return streetEvent;
     }
 
     private APIResponse sendRequest(URL url, String method, byte[] msg) throws GeneralSecurityException {

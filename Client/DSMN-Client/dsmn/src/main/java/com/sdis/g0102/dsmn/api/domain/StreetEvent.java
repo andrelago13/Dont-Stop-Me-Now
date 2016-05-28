@@ -4,6 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.media.Image;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.sql.Timestamp;
 
 /**
@@ -32,5 +35,27 @@ public class StreetEvent {
 
     public boolean hasCoords() {
         return coords != null;
+    }
+
+    public StreetEvent() {}
+
+    public StreetEvent(JSONObject jo) throws JSONException {
+        id = jo.getInt("id");
+        creator = jo.getString("creator");
+
+        int type = jo.getInt("type");
+        StreetEvent.Type[] seTypes = StreetEvent.Type.values();
+        if (type > seTypes.length)
+            throw new JSONException("Invalid Event type.");
+        this.type = seTypes[type];
+
+        description = jo.getString("description");
+        if (jo.has("location"))
+            location = jo.getString("location");
+        if (jo.has("latitude") && jo.has("longitude"))
+            coords = new PointF((float)jo.getDouble("latitude"), (float)jo.getDouble("longitude"));
+        dateTime = new Timestamp(jo.getLong("datetime"));
+        positiveConfirmations = jo.getInt("positiveConfirmations");
+        negativeConfirmations = jo.getInt("negativeConfirmations");
     }
 }
