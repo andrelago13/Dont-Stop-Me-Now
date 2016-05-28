@@ -504,7 +504,7 @@ public class API implements HttpHandler {
 		return jo;
 	}
 	
-	private boolean notifyEvent(int eventID) throws MalformedURLException, IOException, SQLException {
+	public boolean notifyEvent(int eventID) throws MalformedURLException, IOException, SQLException {
 		HttpsURLConnection con = (HttpsURLConnection)(new URL("https://fcm.googleapis.com/fcm/send")).openConnection();
 		con.setRequestMethod("POST");
 		con.setRequestProperty("Content-Type", "application/json");
@@ -518,12 +518,13 @@ public class API implements HttpHandler {
 		if (!rs.next())
 			return false; // May happen, for example, if the event is deleted right after being created.
 		JSONObject joEvent = new JSONObject();
-		joEvent.put("event", eventResultToJSON(rs));
+		JSONObject queryEvent = eventResultToJSON(rs);
+		joEvent.put("event", queryEvent);
 		jo.put("data", joEvent);
 		JSONObject joNotification = new JSONObject();
-		joNotification.put("title", joEvent.getString("description"));
-		if (joEvent.has("location"))
-			joNotification.put("body", joEvent.getString("location"));
+		joNotification.put("title", queryEvent.getString("description"));
+		if (queryEvent.has("location"))
+			joNotification.put("body", queryEvent.getString("location"));
 		jo.put("notification", joNotification);
 		
 		OutputStream os = con.getOutputStream();

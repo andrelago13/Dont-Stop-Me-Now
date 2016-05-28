@@ -26,9 +26,16 @@ public class Server {
 	private Server() throws Exception {
 		HttpsServer server = HttpsServer.create(new InetSocketAddress(443), 0);
 		server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
-		server.createContext("/api", new API(1, "localhost", "postgres", "123456", "AIzaSyC3YVaWGgXvwyiFf_7Z7zZoYtsU4j6qKbQ"));
+		API api = new API(1, "localhost", "postgres", "123456", "AIzaSyC3YVaWGgXvwyiFf_7Z7zZoYtsU4j6qKbQ");
+		server.createContext("/api", api);
 		server.setExecutor(null);
 		server.start();
+		System.out.println("Started");
+		if(api.notifyEvent(6)) {
+			System.out.println("ok");
+		} else {
+			System.out.println("no");
+		}
 	}
 	
 	private static SSLContext createSSLContext() throws Exception {

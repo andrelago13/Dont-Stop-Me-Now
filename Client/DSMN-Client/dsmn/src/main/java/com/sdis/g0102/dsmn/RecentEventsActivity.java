@@ -30,6 +30,7 @@ import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.sdis.g0102.dsmn.api.API;
 import com.sdis.g0102.dsmn.api.domain.StreetEvent;
@@ -229,6 +230,7 @@ public class RecentEventsActivity extends AppCompatActivity {
                     });
             builder.create().show();
         }
+        Log.d("test", "InstanceID token: " + FirebaseInstanceId.getInstance().getToken());
     }
 
     private void enterMyEvents() {
