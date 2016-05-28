@@ -230,7 +230,7 @@ public class API implements HttpHandler {
 				respond(t, formatError(method, query, "Invalid request parameters."), 400);
 			else {
 				int eventID = stmt.getGeneratedKeys().getInt("id");
-				query.put("eventid", "" + eventID);
+				this.notifyEvent(eventID);
 				respond(t, formatSuccess(method, query), 200);
 			}
 		} catch (JSONException e) {
@@ -517,7 +517,9 @@ public class API implements HttpHandler {
 		ResultSet rs = stmt.executeQuery("SELECT *, ST_X(coords::geometry) AS longitude, ST_Y(coords::geometry) AS latitude FROM Events WHERE id = " + eventID);
 		if (!rs.next())
 			return false; // May happen, for example, if the event is deleted right after being created.
-		jo.put("data", eventResultToJSON(rs));
+		JSONObject joEvent = new JSONObject();
+		joEvent.put("event", eventResultToJSON(rs));
+		jo.put("data", joEvent);
 		
 		OutputStream os = con.getOutputStream();
 		os.write(jo.toString().getBytes());
