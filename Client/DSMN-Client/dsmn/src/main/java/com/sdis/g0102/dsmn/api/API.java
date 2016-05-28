@@ -105,15 +105,39 @@ public class API {
         return null;
     }
 
-    public boolean createEvent(StreetEvent.Type type, String duration, String location) {
+    /**
+     *
+     * @param type
+     * @param duration
+     * @param location
+     * @return the event ID on success, null otherwise
+     */
+    public Integer createEvent(StreetEvent.Type type, String duration, String location) {
         return createEvent(type, duration, location, null, null);
     }
 
-    public boolean createEvent(StreetEvent.Type type, String duration, Float longitude, Float latitude) {
+    /**
+     *
+     * @param type
+     * @param duration
+     * @param longitude
+     * @param latitude
+     * @return the event ID on success, null otherwise
+     */
+    public Integer createEvent(StreetEvent.Type type, String duration, Float longitude, Float latitude) {
         return createEvent(type, duration, null, longitude, latitude);
     }
 
-    public boolean createEvent(StreetEvent.Type type, String description, String location, Float longitude, Float latitude) {
+    /**
+     *
+     * @param type
+     * @param description
+     * @param location
+     * @param longitude
+     * @param latitude
+     * @return the event ID on success, null otherwise
+     */
+    public Integer createEvent(StreetEvent.Type type, String description, String location, Float longitude, Float latitude) {
         try {
             JSONObject jo = new JSONObject();
             JSONObject joCreateEvent = new JSONObject();
@@ -137,7 +161,7 @@ public class API {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return false;
+        return null;
     }
 
     public StreetEvent getEvent(int eventID) {
