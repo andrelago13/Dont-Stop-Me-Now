@@ -200,7 +200,7 @@ public class API implements HttpHandler {
 		try {
 			JSONObject jo = new JSONObject(body).getJSONObject("create_event");
 			PreparedStatement stmt = this.db.prepareStatement(
-					"INSERT INTO Events (creator, type, description, location, coords) VALUES (?, ?, ?, ?, Geography(Point(?, ?)::geometry))");
+					"INSERT INTO Events (creator, type, description, location, coords) VALUES (?, ?, ?, ?, Geography(Point(?, ?)::geometry))", Statement.RETURN_GENERATED_KEYS);
 			stmt.setString(1, facebookID);
 			stmt.setInt(2, jo.getInt("type"));
 			stmt.setString(3, jo.getString("description"));
@@ -218,10 +218,13 @@ public class API implements HttpHandler {
 				stmt.setNull(6, java.sql.Types.NULL);
 			}
 
-			if (stmt.executeUpdate() == 0)
+			if (stmt.executeUpdate() == 0 || !stmt.getGeneratedKeys().next())
 				respond(t, formatError(method, query, "Invalid request parameters."), 400);
-			else
+			else {
+				int eventID = stmt.getGeneratedKeys().getInt("id");
+				query.put("eventid", "" + eventID);
 				respond(t, formatSuccess(method, query), 200);
+			}
 		} catch (JSONException e) {
 			respond(t, formatError(method, query, "Invalid request body."), 400);
 			return;
