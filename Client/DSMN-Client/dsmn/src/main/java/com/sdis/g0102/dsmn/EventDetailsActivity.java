@@ -168,6 +168,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                 whole_layout.invalidate();
             }
         });
+        fetchPicture();
     }
 
     private void initDeleteButton() {
@@ -363,5 +364,35 @@ public class EventDetailsActivity extends AppCompatActivity {
                 }
             }
         }).start();
+    }
+
+    private void fetchPicture() {
+        final Activity this_t = this;
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Bitmap picture = api.getEventPhoto(event_id);
+                    pictureFetched(picture);
+                } catch(Exception e) {
+                    e.printStackTrace();
+                    Log.d("EventDetailsActivity", "Unable to fetch picture (might not exist).");
+                }
+            }
+        }).start();
+    }
+
+    private void pictureFetched(Bitmap bitmap) {
+        if(bitmap == null)
+            return;
+
+        // TODO test this after adding picture to create event
+        final Bitmap bitmap_fnl = bitmap;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                event_image.setImageBitmap(bitmap_fnl);
+            }
+        });
     }
 }
