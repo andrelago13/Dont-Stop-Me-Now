@@ -252,9 +252,53 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void setConfirmState(ConfirmState state) {
-        // TODO send to api
-        this.confirmState = state;
-        updateButtons();
+        final ConfirmState state_fnl = state;
+
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                boolean confirmation = false;
+                if(state_fnl == ConfirmState.FALSE) {
+                    confirmation = api.addConfirmation(event_id, false);
+                } else if (state_fnl == ConfirmState.TRUE) {
+                    confirmation = api.addConfirmation(event_id, true);
+                }
+
+                final boolean confirmation_fnl = confirmation;
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(!confirmation_fnl) {
+                            updateButtons();
+                            return;
+                        }
+
+                        switch(confirmState) {
+                            case NONE:
+                                if(state_fnl == ConfirmState.FALSE) {
+                                    event_negative_confirmations.setText("" + (initialNegativeConfs + 1));
+                                } else if (state_fnl == ConfirmState.TRUE) {
+                                    event_positive_confirmations.setText("" + (initialPositiveConfs + 1));
+                                }
+                                break;
+                            case TRUE:
+                            case FALSE:
+                                if(state_fnl == ConfirmState.FALSE) {
+                                    event_negative_confirmations.setText("" + (initialNegativeConfs + 1));
+                                    event_positive_confirmations.setText("" + initialPositiveConfs);
+                                } else if (state_fnl == ConfirmState.TRUE) {
+                                    event_negative_confirmations.setText("" + initialNegativeConfs);
+                                    event_positive_confirmations.setText("" + (initialPositiveConfs+1));
+                                }
+                                break;
+                        }
+                        confirmState = state_fnl;
+                        updateButtons();
+                    }
+                });
+            }
+        }).start();
     }
 
     private void initButtons() {
@@ -319,7 +363,5 @@ public class EventDetailsActivity extends AppCompatActivity {
                 }
             }
         }).start();
-
-        // TODO send to api
     }
 }

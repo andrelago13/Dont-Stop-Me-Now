@@ -185,13 +185,6 @@ public class RecentEventsActivity extends AppCompatActivity {
         startActivityForResult(intent, MY_EVENTS_CODE);
     }
 
-    @Override
-    public void onResume(){
-        super.onResume();
-        refreshList();
-
-    }
-
     private void eventsLoaded(List<StreetEvent> events) {
         final RelativeLayout loading_final = loading;
         final Context ctx = this;

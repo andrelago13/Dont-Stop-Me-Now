@@ -27,5 +27,4 @@ dependencies {
     compile 'com.android.support:design:23.3.0'
     compile 'com.google.android.gms:play-services:9.0.0'
     compile 'com.google.android.gms:play-services-maps:9.0.0'
-    compile 'com.google.android.gms:play-services:fp9.0.0'
 }
