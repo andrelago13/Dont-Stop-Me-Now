@@ -14,11 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -35,7 +31,6 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import jdk.nashorn.internal.scripts.JO;
 import server.FacebookServer;
 import server.NotificationDispatcher;
 
@@ -108,6 +103,19 @@ public class API implements HttpHandler {
 		String token = t.getRequestHeaders().getFirst("Authorization");
 		if (token == null) return null;
 		return FacebookServer.tokenValidation(token);
+	}
+	
+	private void verifyUserAccount(String uid) throws SQLException {
+		Statement stmt = this.db.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT * FROM users WHERE facebookID = " + uid);
+		if(!rs.next()){
+			stmt.executeUpdate("INSERT INTO users(facebookID) VALUES ('" + uid + "')");
+		}
+	}
+	
+	private void updateUserLocation(String uid, String address, int port) throws SQLException {
+		Statement stmt = this.db.createStatement();
+		stmt.executeUpdate("UPDATE users SET address = " + address + ", port = " + port + " WHERE facebookID = " + uid);
 	}
 
 	private void notificationsEndpoint(HttpExchange t, String method, String[] paths, Map<String, String> query, byte[] body, String facebookID) throws IOException, SQLException {
