@@ -4,7 +4,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.json.JSONArray;
@@ -40,11 +43,12 @@ public class API implements HttpHandler {
 	Connection db;
 	NotificationDispatcher notificationDispatcher;
 	int pathOffset;
-
-	public API(int pathOffset, String hostname, String username, String password) throws ClassNotFoundException, SQLException {
+	String FCMServerKey;
+	public API(int pathOffset, String hostname, String username, String password, String FCMServerKey) throws ClassNotFoundException, SQLException {
 		Class.forName("org.postgresql.Driver");
 		this.db = DriverManager.getConnection("jdbc:postgresql://" + hostname + "/", username, password);
 		this.pathOffset = pathOffset;
+		this.FCMServerKey = FCMServerKey;
 		notificationDispatcher = new NotificationDispatcher(db);
 	}
 
@@ -228,7 +232,6 @@ public class API implements HttpHandler {
 				int eventID = stmt.getGeneratedKeys().getInt("id");
 				query.put("eventid", "" + eventID);
 				respond(t, formatSuccess(method, query), 200);
-				this.notificationDispatcher.notifyEvent(eventID);
 			}
 		} catch (JSONException e) {
 			respond(t, formatError(method, query, "Invalid request body."), 400);
@@ -499,6 +502,28 @@ public class API implements HttpHandler {
 		jo.put("event", rs.getInt("event"));
 		jo.put("writer", rs.getString("writer"));
 		return jo;
+	}
+	
+	private boolean notifyEvent(int eventID) throws MalformedURLException, IOException, SQLException {
+		HttpsURLConnection con = (HttpsURLConnection)(new URL("https://fcm.googleapis.com/fcm/send")).openConnection();
+		con.setRequestMethod("POST");
+		con.setRequestProperty("Content-Type", "application/json");
+		con.setRequestProperty("Authorization", "key=" + this.FCMServerKey);
+		con.setDoOutput(true);
+		JSONObject jo = new JSONObject();
+		jo.put("to", "/topics/events");
+		
+		Statement stmt = this.db.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT *, ST_X(coords::geometry) AS longitude, ST_Y(coords::geometry) AS latitude FROM Events WHERE id = " + eventID);
+		if (!rs.next())
+			return false; // May happen, for example, if the event is deleted right after being created.
+		jo.put("data", eventResultToJSON(rs));
+		
+		OutputStream os = con.getOutputStream();
+		os.write(jo.toString().getBytes());
+		os.close();
+		
+		return con.getResponseCode() / 100 == 2;
 	}
 	
 	/***********************************
