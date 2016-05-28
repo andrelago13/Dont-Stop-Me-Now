@@ -8,20 +8,20 @@ import java.util.List;
 
 public class DeleteDatabase {
 
-	public static void databaseDelete() throws IOException, InterruptedException
+	public static void databaseDelete(String pathFile, String databaseName, String password) throws IOException, InterruptedException
 	{
 		List<String> cmds = new ArrayList<String> ();
-		cmds.add("C://Program Files (x86)//PostgreSQL//9.5//bin//dropdb.exe");
+		cmds.add(pathFile);
 		cmds.add("-h");
 		cmds.add("localhost");
 		cmds.add("-p");
 		cmds.add("5432");
 		cmds.add("-U");
 		cmds.add("postgres");  
-		cmds.add("DataBaseRestore");
+		cmds.add(databaseName);
 
 		ProcessBuilder pb = new ProcessBuilder(cmds);
-		pb.environment().put("PGPASSWORD", "123456"); //password do postgres
+		pb.environment().put("PGPASSWORD", password); //password do postgres
 		
 		long startTime = System.currentTimeMillis();
 		try { 
@@ -52,7 +52,7 @@ public class DeleteDatabase {
 	}
 	public static void main(String[] args) {  
 		try {
-			databaseDelete();
+			databaseDelete("C://Program Files (x86)//PostgreSQL//9.5//bin//dropdb.exe", "DataBaseRestore", "123456");
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
