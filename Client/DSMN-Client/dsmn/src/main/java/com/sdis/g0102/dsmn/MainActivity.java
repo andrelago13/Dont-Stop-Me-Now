@@ -26,7 +26,10 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.places.Places;
 import com.sdis.g0102.dsmn.api.API;
+import com.sdis.g0102.dsmn.api.domain.StreetEvent;
 import com.sdis.g0102.dsmn.fcm.FCMActivity;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -36,6 +39,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -80,7 +84,27 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         initLoginButtonCallbacks();
         initTokenTracker();
 
+        try {
+            Bundle b = getIntent().getExtras();
+            String event = b.getString("event");
+            StreetEvent event_obj = new StreetEvent(new JSONObject(event));
+            Log.d("MainActivity", "Detected event " + event_obj.id + ". Accessing details.");
+
+            launchEventDetails(event_obj.id);
+            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("MainActivity", "No event detected. Continuing normal launch.");
+        }
+
         detectInitialLaunch();
+    }
+
+    private void launchEventDetails(int event_id) {
+        Intent intent = new Intent(this, EventDetailsActivity.class);
+        intent.putExtra(RecentEventView.EVENT_ID, event_id);
+        intent.putExtra(RecentEventView.EVENT_IS_MINE, true);
+        startActivity(intent);
     }
 
     private void detectInitialLaunch() {
