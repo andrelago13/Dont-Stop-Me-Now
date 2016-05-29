@@ -40,7 +40,9 @@ import javax.net.ssl.TrustManagerFactory;
  */
 public class API {
 
-    public static final String url_string = "https://172.30.4.33/api/";
+    public static final String url_string_primary = "https://172.30.23.148/api/";
+    public static final String url_string_secondary = "https://172.30.4.33/api/";
+    private String current_url = url_string_primary;
 
     private static API instance = null;
 
@@ -63,7 +65,7 @@ public class API {
 
     private API(Context context, String facebookHash) throws GeneralSecurityException, IOException {
         this.context = context;
-        this.url = new URL(url_string);
+        this.url = new URL(current_url);
         this.facebookHash = facebookHash;
         initSSLContext();
     }
@@ -416,4 +418,120 @@ public class API {
     private boolean isHTTPResponseCodeSuccess(int code) {
         return code / 100 == 2;
     }
+
+    public void updateURL() {
+        try {
+            if(current_url.equals(url_string_primary)) {
+                current_url = url_string_secondary;
+            } else {
+                current_url = url_string_primary;
+            }
+            this.url = new URL(current_url);
+            initSSLContext();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<StreetEvent> listEventsFT(boolean onlyMine) {
+        List<StreetEvent> ret = listEvents(onlyMine);
+        if(ret == null) {
+            updateURL();
+            ret = listEvents(onlyMine);
+        }
+
+        return ret;
+    }
+
+    public Integer createEventFT(StreetEvent.Type type, String description, String location, Float longitude, Float latitude) {
+        Integer ret = createEventFT(type, description, location, longitude, latitude);
+        if(ret == null) {
+            updateURL();
+            ret = createEventFT(type, description, location, longitude, latitude);
+        }
+
+        return ret;
+    }
+
+    public StreetEvent getEventFT(int eventID) {
+        return getEventFT(eventID, null, null);
+    }
+
+    public StreetEvent getEventFT(int eventID, Float longitude, Float latitude) {
+        return getEventFT(eventID, longitude, latitude, null);
+    }
+
+    public StreetEvent getEventFT(int eventID, Float longitude, Float latitude, Float radius) {
+        StreetEvent ret = getEvent(eventID, longitude, latitude, radius);
+        if(ret == null) {
+            updateURL();
+            ret = getEvent(eventID, longitude, latitude, radius);
+        }
+
+        return ret;
+    }
+
+    public boolean deleteEventFT(int eventID) {
+        boolean ret = deleteEvent(eventID);
+        if(!ret) {
+            updateURL();
+            ret = deleteEvent(eventID);
+        }
+
+        return ret;
+    }
+
+    public Bitmap getEventPhotoFT(int eventID) {
+        Bitmap ret = getEventPhoto(eventID);
+        if(ret == null) {
+            updateURL();
+            ret = getEventPhoto(eventID);
+        }
+
+        return ret;
+    }
+
+    public boolean setEventPhotoFT(int eventID, Bitmap photo) {
+        boolean ret = setEventPhoto(eventID, photo);
+        if(!ret) {
+            updateURL();
+            ret = setEventPhoto(eventID, photo);
+        }
+
+        return ret;
+    }
+
+    public List<Comment> listEventCommentsFT(int eventID) {
+        List<Comment> ret = listEventComments(eventID);
+        if(ret == null) {
+            updateURL();
+            ret = listEventComments(eventID);
+        }
+
+        return ret;
+    }
+
+    public boolean addCommentFT(int eventID, String message) {
+        boolean ret = addComment(eventID, message);
+        if(!ret) {
+            updateURL();
+            ret = addComment(eventID, message);
+        }
+
+        return ret;
+    }
+
+    public boolean addConfirmationFT(int eventID, boolean type) {
+        boolean ret = addConfirmation(eventID, type);
+        if(!ret) {
+            updateURL();
+            ret = addConfirmation(eventID, type);
+        }
+
+        return ret;
+    }
+
+
 }
