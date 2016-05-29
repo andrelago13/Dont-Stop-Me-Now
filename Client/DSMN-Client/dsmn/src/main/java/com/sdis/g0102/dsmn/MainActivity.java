@@ -283,4 +283,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         AppIndex.AppIndexApi.end(mGoogleApiClient, viewAction);
         mGoogleApiClient.disconnect();
     }
+
+    public void testAlternateIP(View v) {
+        try {
+            API.getInstance(this.getBaseContext()).updateURL();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+    }
 }

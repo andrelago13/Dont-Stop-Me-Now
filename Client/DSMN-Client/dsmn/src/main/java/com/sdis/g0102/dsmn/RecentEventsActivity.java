@@ -95,7 +95,7 @@ public class RecentEventsActivity extends AppCompatActivity {
                 try {
                     Looper.prepare();
                     api = API.getInstance(this_t.getBaseContext());
-                    List<StreetEvent> events = api.listEvents(false);
+                    List<StreetEvent> events = api.listEventsFT(false);
                     eventsLoaded(events);
                 } catch (IOException e) {
                     e.printStackTrace();
