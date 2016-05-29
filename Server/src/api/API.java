@@ -243,7 +243,7 @@ public class API implements HttpHandler {
 				JSONObject joResponse = new JSONObject();
 				JSONObject joSuccess = new JSONObject();
 				joResponse.put("success", joSuccess);
-				joSuccess.put("eventID", eventID);
+				joSuccess.put("eventid", eventID);
 				respond(t, joResponse.toString(), 200);
 			}
 		} catch (JSONException e) {

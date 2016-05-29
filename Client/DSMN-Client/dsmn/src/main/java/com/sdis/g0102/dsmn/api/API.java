@@ -153,7 +153,6 @@ public class API {
             APIResponse response = sendRequest(new URL(this.url + "events/"), "POST", jo.toString().getBytes());
             if (!isHTTPResponseCodeSuccess(response.getCode())) return null;
             jo = new JSONObject(new String(response.getMessage()));
-            Log.d("PENIS", jo.toString());
             return jo.getJSONObject("success").getInt("eventid");
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
