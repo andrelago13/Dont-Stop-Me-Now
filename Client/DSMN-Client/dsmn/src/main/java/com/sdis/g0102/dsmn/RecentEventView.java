@@ -66,7 +66,9 @@ public class RecentEventView extends LinearLayout {
             this.description.setText(description);
         }
 
-        if(address != null) {
+        if(address == null) {
+            this.address.setText("");
+        } else {
             this.address.setText(address);
         }
 

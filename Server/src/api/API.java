@@ -220,12 +220,12 @@ public class API implements HttpHandler {
 			stmt.setString(1, facebookID);
 			stmt.setInt(2, jo.getInt("type"));
 			stmt.setString(3, jo.getString("description"));
-
+			
 			if (jo.has("location"))
 				stmt.setString(4, jo.getString("location"));
 			else
-				stmt.setNull(5, java.sql.Types.NULL);
-
+				stmt.setNull(4, java.sql.Types.NULL);
+			
 			if (jo.has("longitude") && jo.has("latitude")) {
 				stmt.setFloat(5, (float)jo.getDouble("longitude"));
 				stmt.setFloat(6, (float)jo.getDouble("latitude"));
@@ -233,15 +233,21 @@ public class API implements HttpHandler {
 				stmt.setNull(5, java.sql.Types.NULL);
 				stmt.setNull(6, java.sql.Types.NULL);
 			}
-
+			
 			if (stmt.executeUpdate() == 0 || !stmt.getGeneratedKeys().next())
 				respond(t, formatError(method, query, "Invalid request parameters."), 400);
 			else {
+				System.out.println(jo.toString());
 				int eventID = stmt.getGeneratedKeys().getInt("id");
 				this.notifyEvent(eventID);
-				respond(t, formatSuccess(method, query), 200);
+				JSONObject joResponse = new JSONObject();
+				JSONObject joSuccess = new JSONObject();
+				joResponse.put("success", joSuccess);
+				joSuccess.put("eventID", eventID);
+				respond(t, joResponse.toString(), 200);
 			}
 		} catch (JSONException e) {
+			System.err.println(e.getMessage());
 			respond(t, formatError(method, query, "Invalid request body."), 400);
 			return;
 		}

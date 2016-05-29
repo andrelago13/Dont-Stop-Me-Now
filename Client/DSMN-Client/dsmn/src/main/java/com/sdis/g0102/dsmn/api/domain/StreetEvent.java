@@ -3,6 +3,7 @@ package com.sdis.g0102.dsmn.api.domain;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.media.Image;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,6 +53,7 @@ public class StreetEvent {
         description = jo.getString("description");
         if (jo.has("location"))
             location = jo.getString("location");
+
         if (jo.has("latitude") && jo.has("longitude"))
             coords = new PointF((float)jo.getDouble("latitude"), (float)jo.getDouble("longitude"));
         dateTime = new Timestamp(jo.getLong("datetime"));
