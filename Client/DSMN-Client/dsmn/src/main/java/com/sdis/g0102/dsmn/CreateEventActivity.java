@@ -180,7 +180,7 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
             @Override
             public void run() {
                 Looper.prepare();
-                Integer event_id = api.createEventFT(event_type, event_description, event_location.getName().toString(), (float)event_location.getLatLng().latitude, (float)event_location.getLatLng().longitude);
+                Integer event_id = api.createEventFT(event_type, event_description, event_location.getPlaceTypes().get(0) == Place.TYPE_SYNTHETIC_GEOCODE ? null : event_location.getName().toString(), (float)event_location.getLatLng().latitude, (float)event_location.getLatLng().longitude);
                 if(event_id != null){
                     Log.d("CreateEventActivity", "Created event.");
                 } else {
