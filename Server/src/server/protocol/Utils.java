@@ -12,8 +12,7 @@ public class Utils {
 		String ip = null;
 
 		try {
-			Enumeration<NetworkInterface> interfaces = NetworkInterface
-					.getNetworkInterfaces();
+			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
 
 			while (interfaces.hasMoreElements()) {
 				NetworkInterface iface = interfaces.nextElement();
@@ -33,5 +32,10 @@ public class Utils {
 		}
 
 		return ip;
+	}
+	
+	public static void main(String[] args)
+	{
+		System.out.println(Utils.getIPv4());
 	}
 }

@@ -9,27 +9,34 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-
 import server.BackupDatabase;
+import server.CreateDatabase;
+import server.DeleteDatabase;
 import server.RestoreDatabase;
 import server.Server;
 
 public class SocketListener extends Thread {
-	public static int BACKUP_TIMEOUT = 10000;
+	public static int ACCEPT_TIMEOUT = 20000;
+	public static int FIRST_BACKUP_TIMEOUT = 10000;
+	public static int SECOND_BACKUP_TIMEOUT = 5000;
 	private ServerSocket serverSocket = null;
 	private Socket socket = null;
 	private Server server;
 	private String address;
 	private Integer port;
+	private String ip;
+	private boolean first_attempt = true;
 	
 	public SocketListener(Server server, String address, Integer port) throws Exception {
 		this.server = server;
 		this.port = port;
 		this.address = address;
+		this.ip = Utils.getIPv4();
+		System.out.println("Server set at IP: " + ip);
 	}
 
 	private void setup() {
@@ -48,6 +55,7 @@ public class SocketListener extends Thread {
 	private void setupServerSocket() {
 		try {
 			this.serverSocket = new ServerSocket(this.port);
+			this.serverSocket.setSoTimeout(SocketListener.ACCEPT_TIMEOUT);
 		} catch (IOException e) {
 			System.out.println("ERROR CREATING SERVER SOCKET");
 		}
@@ -70,20 +78,37 @@ public class SocketListener extends Thread {
 	private void primaryHandler() {
 		try {
 			this.socket = this.serverSocket.accept();
-			Thread.sleep(10000);
 			this.sendBackup();
 		} catch (Exception e) {
-			//e.printStackTrace();
 		}
 	}
 
 	private void backupHandler() {
 		try {
+			if(this.first_attempt)
+				Thread.sleep(SocketListener.FIRST_BACKUP_TIMEOUT);
+			else 
+				Thread.sleep(SocketListener.SECOND_BACKUP_TIMEOUT);
 			this.socket = new Socket(this.address, this.port);
+			this.first_attempt = true;
 			this.receiveBackup();
 		} catch (Exception e) {
+			if(this.first_attempt){
+				System.out.println("Failed first attempt to connect to PRIMARY server.");
+				this.first_attempt = false;
+				return;
+			}
 			this.setupServerSocket();
+	        try {
+	        	System.out.println("Connection to PRIMARY server failed. Switching to PRIMARY role");
+	        	DeleteDatabase.databaseDelete("C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\dropdb.exe", "DataBaseRestore", "123456");
+	        	CreateDatabase.databaseCreate("C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\createdb.exe", "DataBaseRestore", "123456");
+				RestoreDatabase.databaseRestore("C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\pg_restore.exe", "DataBaseRestore", "./t/teste.sql", "123456");
+			} catch (IOException | InterruptedException e1) {
+				System.err.println("ERROR ON DATABASE MANAGEMENT DURING ROLE SWAPING");
+			}
 			this.server.setType(Server.Type.PRIMARY);
+			this.first_attempt = true;
 		}
 	}
 
@@ -96,14 +121,14 @@ public class SocketListener extends Thread {
           
         //Get socket's output stream
         DataOutputStream os = new DataOutputStream(socket.getOutputStream());
-                
+        
         //Read File Contents into contents array 
         byte[] contents;
         long fileLength = file.length(); 
         System.out.println("Backup file length: " + file.length());
         long current = 0;
          
-        long start = System.nanoTime();
+        System.nanoTime();
         while(current!=fileLength){ 
             int size = 10000;
             if(fileLength - current >= size)
@@ -126,7 +151,6 @@ public class SocketListener extends Thread {
 	}
 
 	private void receiveBackup() throws Exception {
-		System.out.println("Starting Backup protocol");
 		//Initialize the FileOutputStream to the output file's full path.
         FileOutputStream fos = new FileOutputStream("./t/teste.sql");
         BufferedOutputStream bos = new BufferedOutputStream(fos);
@@ -135,10 +159,12 @@ public class SocketListener extends Thread {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         //No of bytes read in one read() call
         int bytesRead = 0;
-        
-        while((bytesRead = is.read()) != -1)
+
+		System.out.println("Starting Backup protocol");
+        while((bytesRead = is.read()) != -1){
         	baos.write(bytesRead);
-        
+        }
+
         byte[] data = baos.toByteArray();
         bos.write(data);
         
@@ -146,8 +172,6 @@ public class SocketListener extends Thread {
         baos.close();
         this.socket.close();
         System.out.println("File saved successfully!");
-        
-        RestoreDatabase.databaseRestore("C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\pg_restore.exe", "DataBaseRestore", "./t/teste.sql", "123456");
 	}
 
 }

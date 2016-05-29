@@ -30,28 +30,27 @@ public class Server {
 	}
 
 	private Server(String[] args) throws Exception {
-		this.setupServerSync(args);
-		
-		this.setHttpsConnection();
-	}
-
-	private void setupServerSync(String[] args) throws Exception {
 		if (!this.validateArgs(args)) {
-			System.out.println("Usage: Server <InetAddress_address> <Integer_port>");
+			System.out.println("Usage: Server <String_address> <Integer_TCPsocket_port> <Integer_HTTPSsocket_port>");
 			System.exit(1);
 		}
 		
-		this.scktListener = new SocketListener(this, args[0], Integer.parseInt(args[1]));
+		this.setupServerSync(args);
 		
+		this.setHttpsConnection(Integer.parseInt(args[2]));
+	}
+
+	private void setupServerSync(String[] args) throws Exception {		
+		this.scktListener = new SocketListener(this, args[0], Integer.parseInt(args[1]));
 		this.scktListener.start();
 	}
 
 	private boolean validateArgs(String[] args) {
-		return args.length >= 2;
+		return args.length == 3;
 	}
 	
-	private void setHttpsConnection() throws Exception {
-		HttpsServer server = HttpsServer.create(new InetSocketAddress(443), 0);
+	private void setHttpsConnection(Integer port) throws Exception {
+		HttpsServer server = HttpsServer.create(new InetSocketAddress(port), 0);
 		server.setHttpsConfigurator(new HttpsConfigurator(createSSLContext()));
 		API api = new API(1, "localhost", "postgres", "123456", "AIzaSyC3YVaWGgXvwyiFf_7Z7zZoYtsU4j6qKbQ");
 		server.createContext("/api", api);

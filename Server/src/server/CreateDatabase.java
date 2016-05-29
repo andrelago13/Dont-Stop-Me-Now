@@ -6,9 +6,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeleteDatabase {
+public class CreateDatabase {
 
-	public static void databaseDelete(String pathFile, String databaseName, String password) throws IOException, InterruptedException
+	public static void databaseCreate(String pathFile, String databaseName, String password) throws IOException, InterruptedException
 	{
 		List<String> cmds = new ArrayList<String> ();
 		cmds.add(pathFile);
@@ -47,16 +47,16 @@ public class DeleteDatabase {
 		long elapsedTime = stopTime - startTime;
 
 		System.out.println("Time elapsed -> " + elapsedTime + "ms" );
-		System.out.println("Delete bem sucedido.");
+		System.out.println("Create bem sucedido.");
 
 	}
 	public static void main(String[] args) {  
 		try {
-			databaseDelete("C://Program Files (x86)//PostgreSQL//9.5//bin//dropdb.exe", "DataBaseRestore", "123456");
+			databaseCreate("C://Program Files (x86)//PostgreSQL//9.5//bin//createdb.exe", "DataBaseRestore", "123456");
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}  
-	}
+	} 
 }
