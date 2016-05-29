@@ -197,7 +197,10 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
                     }
                 }
 
-                this_t.finish();
+                Intent intent = new Intent(this_t, EventDetailsActivity.class);
+                intent.putExtra(RecentEventView.EVENT_ID, event_id);
+                intent.putExtra(RecentEventView.EVENT_IS_MINE, true);
+                this_t.startActivity(intent);
             }
         }).start();
     }
