@@ -180,7 +180,7 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
             @Override
             public void run() {
                 Looper.prepare();
-                Integer event_id = api.createEvent(event_type, event_description, event_location.getName().toString(), (float)event_location.getLatLng().latitude, (float)event_location.getLatLng().longitude);
+                Integer event_id = api.createEventFT(event_type, event_description, event_location.getPlaceTypes().get(0) == Place.TYPE_SYNTHETIC_GEOCODE ? null : event_location.getName().toString(), (float)event_location.getLatLng().latitude, (float)event_location.getLatLng().longitude);
                 if(event_id != null){
                     Log.d("CreateEventActivity", "Created event.");
                 } else {
@@ -190,14 +190,17 @@ public class CreateEventActivity extends AppCompatActivity implements AdapterVie
                 }
 
                 if(event_selected_image != null) {
-                    if(!api.setEventPhoto(event_id, event_selected_image)) {
+                    if(!api.setEventPhotoFT(event_id, event_selected_image)) {
                         Log.d("CreateEventActivity", "Unable to upload event photo.");
                     } else {
                         Log.d("CreateEventActivity", "Event photo uploaded.");
                     }
                 }
 
-                this_t.finish();
+                Intent intent = new Intent(this_t, EventDetailsActivity.class);
+                intent.putExtra(RecentEventView.EVENT_ID, event_id);
+                intent.putExtra(RecentEventView.EVENT_IS_MINE, true);
+                this_t.startActivity(intent);
             }
         }).start();
     }

@@ -104,9 +104,9 @@ public class EventDetailsActivity extends AppCompatActivity {
                 try {
                     Looper.prepare();
                     api = API.getInstance(this_t.getBaseContext());
-                    StreetEvent event = api.getEvent(event_id);
+                    StreetEvent event = api.getEventFT(event_id);
                     detailsFetched(event);
-                    List<Comment> comments = api.listEventComments(event_id);
+                    List<Comment> comments = api.listEventCommentsFT(event_id);
                     initCommentsLayout(comments);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -205,7 +205,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         new Thread( new Runnable() {
             @Override
             public void run() {
-                if(api.deleteEvent(event_id)) {
+                if(api.deleteEventFT(event_id)) {
                     this_t.finish();
                 } else {
                     Toast.makeText(this_t, "Unable to delete event.", Toast.LENGTH_LONG);
@@ -260,9 +260,9 @@ public class EventDetailsActivity extends AppCompatActivity {
             public void run() {
                 boolean confirmation = false;
                 if(state_fnl == ConfirmState.FALSE) {
-                    confirmation = api.addConfirmation(event_id, false);
+                    confirmation = api.addConfirmationFT(event_id, false);
                 } else if (state_fnl == ConfirmState.TRUE) {
-                    confirmation = api.addConfirmation(event_id, true);
+                    confirmation = api.addConfirmationFT(event_id, true);
                 }
 
                 final boolean confirmation_fnl = confirmation;
@@ -350,8 +350,8 @@ public class EventDetailsActivity extends AppCompatActivity {
             public void run() {
                 try {
                     Looper.prepare();
-                    if(api.addComment(event_id, text)) {
-                        List<Comment> comments = api.listEventComments(event_id);
+                    if(api.addCommentFT(event_id, text)) {
+                        List<Comment> comments = api.listEventCommentsFT(event_id);
                         initCommentsLayout(comments);
                     } else {
                         Toast.makeText(this_t, "Unable to add comment.", Toast.LENGTH_SHORT);
@@ -372,7 +372,7 @@ public class EventDetailsActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Bitmap picture = api.getEventPhoto(event_id);
+                    Bitmap picture = api.getEventPhotoFT(event_id);
                     pictureFetched(picture);
                 } catch(Exception e) {
                     e.printStackTrace();

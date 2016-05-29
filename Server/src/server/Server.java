@@ -47,7 +47,7 @@ public class Server {
 	}
 
 	private boolean validateArgs(String[] args) {
-		return args.length >= 3;
+		return args.length >= 2;
 	}
 	
 	private void setHttpsConnection() throws Exception {
