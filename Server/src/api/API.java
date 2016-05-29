@@ -540,6 +540,7 @@ public class API implements HttpHandler {
 		if (queryEvent.has("location"))
 			joNotification.put("body", queryEvent.getString("location"));
 		jo.put("notification", joNotification);
+		System.out.println(jo.toString());
 		
 		OutputStream os = con.getOutputStream();
 		os.write(jo.toString().getBytes());

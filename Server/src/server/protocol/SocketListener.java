@@ -73,7 +73,7 @@ public class SocketListener extends Thread {
 			Thread.sleep(10000);
 			this.sendBackup();
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 
