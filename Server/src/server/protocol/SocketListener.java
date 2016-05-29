@@ -20,7 +20,6 @@ import server.RestoreDatabase;
 import server.Server;
 
 public class SocketListener extends Thread {
-	public static int ACCEPT_TIMEOUT = 20000;
 	public static int FIRST_BACKUP_TIMEOUT = 10000;
 	public static int SECOND_BACKUP_TIMEOUT = 5000;
 	private ServerSocket serverSocket = null;
@@ -55,7 +54,6 @@ public class SocketListener extends Thread {
 	private void setupServerSocket() {
 		try {
 			this.serverSocket = new ServerSocket(this.port);
-			this.serverSocket.setSoTimeout(SocketListener.ACCEPT_TIMEOUT);
 		} catch (IOException e) {
 			System.out.println("ERROR CREATING SERVER SOCKET");
 		}
@@ -77,9 +75,12 @@ public class SocketListener extends Thread {
 
 	private void primaryHandler() {
 		try {
+			BackupDatabase.databaseBackup("C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\pg_dump.exe","./backup.sql", "123456");
 			this.socket = this.serverSocket.accept();
 			this.sendBackup();
 		} catch (Exception e) {
+			System.err.println("SERVER SYNC ERROR: Failed to connect to a BACKUP server. Shutting down...");
+			System.exit(1);
 		}
 	}
 
@@ -113,7 +114,6 @@ public class SocketListener extends Thread {
 	}
 
 	private void sendBackup() throws Exception {
-		BackupDatabase.databaseBackup("C:\\Program Files (x86)\\PostgreSQL\\9.5\\bin\\pg_dump.exe","./backup.sql", "123456");
 		
 		File file = new File("./backup.sql");
         FileInputStream fis = new FileInputStream(file);
