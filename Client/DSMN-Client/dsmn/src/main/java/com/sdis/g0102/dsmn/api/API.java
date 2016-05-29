@@ -40,7 +40,7 @@ import javax.net.ssl.TrustManagerFactory;
  */
 public class API {
 
-    public static final String url_string = "https://172.30.23.148/api/";
+    public static final String url_string = "https://172.30.4.33/api/";
 
     private static API instance = null;
 
@@ -153,6 +153,7 @@ public class API {
             APIResponse response = sendRequest(new URL(this.url + "events/"), "POST", jo.toString().getBytes());
             if (!isHTTPResponseCodeSuccess(response.getCode())) return null;
             jo = new JSONObject(new String(response.getMessage()));
+            Log.d("PENIS", jo.toString());
             return jo.getJSONObject("success").getInt("eventid");
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
