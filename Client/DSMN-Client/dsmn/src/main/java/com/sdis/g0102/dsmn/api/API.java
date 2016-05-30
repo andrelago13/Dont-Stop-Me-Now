@@ -40,8 +40,8 @@ import javax.net.ssl.TrustManagerFactory;
  */
 public class API {
 
-    public static final String url_string_primary = "https://172.30.23.148/api/";
-    public static final String url_string_secondary = "https://172.30.4.33/api/";
+    public static final String url_string_primary = "https://172.30.4.33/api/";
+    public static final String url_string_secondary = "https://172.30.25.106/api/";
     private String current_url = url_string_primary;
 
     private static API instance = null;
